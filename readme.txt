@@ -1,1 +1,1 @@
-Read this
+This is my project for Mini LD 59! Yay -Joe Cowman
