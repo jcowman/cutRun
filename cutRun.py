@@ -159,8 +159,9 @@ class Landform(object):
 class Anisprite(object):
 
     #aniSpeed in ms
+    #moveSpeed in pixels/s
 
-    def __init__(self,spriteSlice,initGridCoords,aniSpeed=100,step=GRIDSIZE):
+    def __init__(self,spriteSlice,initGridCoords,moveSpeed=0,aniSpeed=80,step=GRIDSIZE):
         
         self.spriteList = spriteSlice[:] + [pygame.transform.flip(x,True,False) for x in spriteSlice[3:6]]
         
@@ -172,6 +173,10 @@ class Anisprite(object):
 
         self.aniSpeed = aniSpeed
         self.timeSinceAni = 0
+
+        self.moveSpeed = moveSpeed
+
+        self.vx, self.vy = (0,0)
 
     def changeState(self,newState=None):
 
@@ -211,6 +216,8 @@ class Anisprite(object):
                 if self.spriteIndex > 11:
                     self.spriteIndex = 9
 
+            self.x -= self.moveSpeed*msPassed/1000.0
+
         if self.state == RIGHTRUN:
 
             if self.timeSinceAni >= self.aniSpeed:
@@ -220,6 +227,10 @@ class Anisprite(object):
 
                 if self.spriteIndex > 5:
                     self.spriteIndex = 3
+
+            self.x += self.moveSpeed*msPassed/1000.0
+
+        self.coords = (self.x,self.y)
                 
 
     def draw(self,destSurf):
@@ -235,6 +246,8 @@ sheet2 = get_spritesheet("randomImage.png")
 list2 = get_sprites(sheet2,GRIDSIZE)
 sheet3 = get_spritesheet("numbered.png")
 list3 = get_sprites(sheet3,GRIDSIZE)
+sheet4 = get_spritesheet("alt2.png")
+list4 = get_sprites(sheet4,GRIDSIZE)
 
 landList = []
 
@@ -246,7 +259,7 @@ landList.append(Landform(landforms.stair6x6,list1,(14,4)))
 land1 = Landform(landforms.base5x3,list1,(0,10))
 land2 = Landform(landforms.stair6x6,list1,(5,10))
 
-player = Anisprite(list1[P1o:P1],(0,0))
+player = Anisprite(list1[P1o:P1],(0,9),90)
 
 aniList = [player]
 
@@ -266,7 +279,7 @@ while True:
             if event.key == K_LEFT:
                 player.changeState(LEFTRUN)
 
-            elif event.key == K_RIGHT:
+            if event.key == K_RIGHT:
                 player.changeState(RIGHTRUN)
 
         elif event.type == KEYUP:
@@ -274,7 +287,7 @@ while True:
             if event.key == K_LEFT:
                 player.changeState(IDLE)
 
-            elif event.key == K_RIGHT:
+            if event.key == K_RIGHT:
                 player.changeState(IDLE)
 
     gameSurf.fill(LIGHTBLUE)
