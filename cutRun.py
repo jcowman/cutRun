@@ -64,12 +64,29 @@ def demo_sprites(spriteList,destSurf,step):
         x += step
 
     return destSurf
+
+def draw_grid(surf,step,width=1,color=WHITE):
+    w,h = surf.get_size()
+    numX,numY = (w/step,h/step)
+    x,y = (0,0)
+
+    for c in xrange(numX):
+        x = c*step
+        pygame.draw.line(surf,color,(x,0),(x,h),width)
+
+    for r in xrange(numY):
+        y = r*step
+        pygame.draw.line(surf,color,(0,y),(w,y),width)
+
+    return surf
         
 
 sheet1 = get_spritesheet("example1.png")
 list1 = get_sprites(sheet1,GRIDSIZE)
 sheet2 = get_spritesheet("randomImage.png")
 list2 = get_sprites(sheet2,GRIDSIZE)
+sheet3 = get_spritesheet("numbered.png")
+list3 = get_sprites(sheet3,GRIDSIZE)
 
 while True:
 
@@ -79,7 +96,9 @@ while True:
 
     gameSurf.fill(GRAY1)
 
-    gameSurf = demo_sprites(list2,gameSurf,GRIDSIZE)
+    gameSurf = draw_grid(gameSurf,GRIDSIZE)
+
+    gameSurf = demo_sprites(list1,gameSurf,GRIDSIZE)
     #gameSurf.blit(list1[1],(0,0))
     #gameSurf.blit(sheet1,(0,0),(16, 80, 16, 16))
 
