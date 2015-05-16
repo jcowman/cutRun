@@ -33,6 +33,8 @@ pygame.init()
 
 DISPLAYSURF = pygame.display.set_mode((SCREENX,SCREENY))
 
+pygame.display.set_caption("CODENAME: Cut and Run")
+
 global gameSurf
 gameSurf = pygame.Surface((GAMEX,GAMEY))
 
@@ -178,6 +180,11 @@ class Anisprite(object):
 
         self.vx, self.vy = (0,0)
 
+        self.boundRects = [r.get_bounding_rect() for r in self.spriteList]
+        self.boundBox = (0,0,0,0)
+
+        self.currentGrids = []
+
     def changeState(self,newState=None):
 
         self.timeSinceAni = 0
@@ -206,6 +213,9 @@ class Anisprite(object):
 
         self.timeSinceAni += msPassed
 
+        if self.state == IDLE:
+            self.vx = 0
+
         if self.state == LEFTRUN:
 
             if self.timeSinceAni >= self.aniSpeed:
@@ -216,7 +226,7 @@ class Anisprite(object):
                 if self.spriteIndex > 11:
                     self.spriteIndex = 9
 
-            self.x -= self.moveSpeed*msPassed/1000.0
+            self.vx = -self.moveSpeed
 
         if self.state == RIGHTRUN:
 
@@ -228,12 +238,20 @@ class Anisprite(object):
                 if self.spriteIndex > 5:
                     self.spriteIndex = 3
 
-            self.x += self.moveSpeed*msPassed/1000.0
+            self.vx = self.moveSpeed
+
+        self.x += self.vx*msPassed/1000.0
 
         self.coords = (self.x,self.y)
+
+        self.boundBox = Rect(self.boundRects[self.spriteIndex])
+        self.boundBox.x += self.x
+        self.boundBox.y += self.y
                 
 
     def draw(self,destSurf):
+
+        destSurf.fill(RED,self.boundBox)
         
         destSurf.blit(self.spriteList[self.spriteIndex],self.coords)
         
@@ -259,7 +277,7 @@ landList.append(Landform(landforms.stair6x6,list1,(14,4)))
 land1 = Landform(landforms.base5x3,list1,(0,10))
 land2 = Landform(landforms.stair6x6,list1,(5,10))
 
-player = Anisprite(list1[P1o:P1],(0,9),90)
+player = Anisprite(list4[P1o:P1],(0,9),90)
 
 aniList = [player]
 
@@ -285,10 +303,12 @@ while True:
         elif event.type == KEYUP:
 
             if event.key == K_LEFT:
-                player.changeState(IDLE)
+                if player.state == LEFTRUN:
+                    player.changeState(IDLE)
 
             if event.key == K_RIGHT:
-                player.changeState(IDLE)
+                if player.state == RIGHTRUN:
+                    player.changeState(IDLE)
 
     gameSurf.fill(LIGHTBLUE)
 
