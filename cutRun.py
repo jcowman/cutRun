@@ -68,6 +68,8 @@ def demo_sprites(spriteList,destSurf,step):
 
 sheet1 = get_spritesheet("example1.png")
 list1 = get_sprites(sheet1,GRIDSIZE)
+sheet2 = get_spritesheet("randomImage.png")
+list2 = get_sprites(sheet2,GRIDSIZE)
 
 while True:
 
@@ -77,7 +79,7 @@ while True:
 
     gameSurf.fill(GRAY1)
 
-    gameSurf = demo_sprites(list1,gameSurf,GRIDSIZE)
+    gameSurf = demo_sprites(list2,gameSurf,GRIDSIZE)
     #gameSurf.blit(list1[1],(0,0))
     #gameSurf.blit(sheet1,(0,0),(16, 80, 16, 16))
 
