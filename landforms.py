@@ -7,3 +7,10 @@
 base5x3 =   ["qqqqq",
                    "qqqqq",
                    "qqqqq"]
+
+stair6x6 = ["00000j",
+                "0000jj",
+                 "000jjj",
+                 "00jjjj",
+                 "0jjjjj",
+                  "jjjjjj"]
