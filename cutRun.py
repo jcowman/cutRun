@@ -20,7 +20,14 @@ GRAY1 = (125,125,125)
 RED = (255,0,0)
 GREEN = (0,255,0)
 BLUE = (0,0,255)
+LIGHTBLUE = (100,255,255)
 COLORKEY = (1,1,1)
+
+IDLE = "Idle"
+LEFTRUN = "LeftRun"
+LEFTFACE = "LeftFace"
+RIGHTRUN = "RightRun"
+RIGHTFACE = "RightFace"
 
 pygame.init()
 
@@ -30,6 +37,11 @@ global gameSurf
 gameSurf = pygame.Surface((GAMEX,GAMEY))
 
 TILEINDEX = {"a":32,"b":33,"c":34,"d":35,"e":36,"f":37,"g":38,"h":39,"i":40,"j":41,"k":42,"l":43,"m":44,"n":45,"o":46,"p":47,"q":48,"r":49,"s":50,"t":51,"u":52,"v":53,"w":54,"x":55,"y":56,"z":57,"1":58,"2":59,"3":60,"4":61,"5":62,"6":63}
+
+#sprite ranges for each animated character
+P1o,P1 = (0,9)
+P2o,P2 = (9,18)
+P3o,P3 = (18,26)
 
 def get_spritesheet(filename):
     sheet = pygame.image.load(filename).convert_alpha()
@@ -87,7 +99,7 @@ def draw_grid(surf,step,width=1,color=WHITE):
 
     return surf
 
-class landform(object):
+class Landform(object):
 
     def __init__(self,terrain,spriteList,gridCoords):
 
@@ -143,6 +155,78 @@ class landform(object):
         destSurf.blit(self.surf,(self.globalX,self.globalY))
 
         return destSurf
+
+class Anisprite(object):
+
+    #aniSpeed in ms
+
+    def __init__(self,spriteSlice,initGridCoords,aniSpeed=100,step=GRIDSIZE):
+        
+        self.spriteList = spriteSlice[:] + [pygame.transform.flip(x,True,False) for x in spriteSlice[3:6]]
+        
+        self.coords = initGridCoords[0]*step,initGridCoords[1]*step
+        self.x,self.y = self.coords
+        
+        self.state = IDLE
+        self.spriteIndex = 0
+
+        self.aniSpeed = aniSpeed
+        self.timeSinceAni = 0
+
+    def changeState(self,newState=None):
+
+        self.timeSinceAni = 0
+
+        if newState == IDLE:
+            self.state = IDLE
+            self.spriteIndex = 0
+
+        elif newState == LEFTFACE:
+            self.state = LEFTFACE
+            self.spriteIndex = 9
+
+        elif newState == LEFTRUN:
+            self.state = LEFTRUN
+            self.spriteIndex = 9
+
+        elif newState == RIGHTFACE:
+            self.state = RIGHTFACE
+            self.spriteIndex = 3
+
+        elif newState == RIGHTRUN:
+            self.state = RIGHTRUN
+            self.spriteIndex = 3
+
+    def update(self,msPassed):
+
+        self.timeSinceAni += msPassed
+
+        if self.state == LEFTRUN:
+
+            if self.timeSinceAni >= self.aniSpeed:
+                
+                self.timeSinceAni = 0
+                self.spriteIndex += 1
+
+                if self.spriteIndex > 11:
+                    self.spriteIndex = 9
+
+        if self.state == RIGHTRUN:
+
+            if self.timeSinceAni >= self.aniSpeed:
+                
+                self.timeSinceAni = 0
+                self.spriteIndex += 1
+
+                if self.spriteIndex > 5:
+                    self.spriteIndex = 3
+                
+
+    def draw(self,destSurf):
+        
+        destSurf.blit(self.spriteList[self.spriteIndex],self.coords)
+        
+        return destSurf
         
 
 sheet1 = get_spritesheet("example1.png")
@@ -155,22 +239,47 @@ list3 = get_sprites(sheet3,GRIDSIZE)
 landList = []
 
 for x in [0,5,10,15]:
-    landList.append(landform(landforms.base5x3,list1,(x,10)))
+    landList.append(Landform(landforms.base5x3,list1,(x,10)))
 
-landList.append(landform(landforms.stair6x6,list1,(14,4)))
+landList.append(Landform(landforms.stair6x6,list1,(14,4)))
 
-land1 = landform(landforms.base5x3,list1,(0,10))
-land2 = landform(landforms.stair6x6,list1,(5,10))
+land1 = Landform(landforms.base5x3,list1,(0,10))
+land2 = Landform(landforms.stair6x6,list1,(5,10))
+
+player = Anisprite(list1[P1o:P1],(0,0))
+
+aniList = [player]
+
+clock = pygame.time.Clock()
+timePassed = clock.tick()
+timePassedSeconds = timePassed/1000.
 
 while True:
 
     for event in pygame.event.get():
+        
         if event.type == QUIT:
             exit()
 
-    gameSurf.fill(GRAY1)
+        elif event.type == KEYDOWN:
 
-    gameSurf = draw_grid(gameSurf,GRIDSIZE)
+            if event.key == K_LEFT:
+                player.changeState(LEFTRUN)
+
+            elif event.key == K_RIGHT:
+                player.changeState(RIGHTRUN)
+
+        elif event.type == KEYUP:
+
+            if event.key == K_LEFT:
+                player.changeState(IDLE)
+
+            elif event.key == K_RIGHT:
+                player.changeState(IDLE)
+
+    gameSurf.fill(LIGHTBLUE)
+
+    #gameSurf = draw_grid(gameSurf,GRIDSIZE)
 
     #gameSurf = demo_sprites(list1,gameSurf,GRIDSIZE)
     #gameSurf.blit(list3[tileIndex[random.choice(TILEINDEX.keys())]],(0,0))
@@ -183,9 +292,16 @@ while True:
         gameSurf = x.blit_surf(gameSurf)
     #gameSurf = land2.blit_surf(gameSurf)
 
+    for a in aniList:
+        a.update(timePassed)
+        gameSurf = a.draw(gameSurf)
+
     if (SCREENX,SCREENY) != (GAMEX,GAMEY):
         pygame.transform.scale(gameSurf,(SCREENX,SCREENY),DISPLAYSURF)
     else:
         DISPLAYSURF.blit(gameSurf,(0,0))
         
     pygame.display.update()
+
+    timePassed = clock.tick()
+    timePassedSeconds = timePassed/1000.
