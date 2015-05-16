@@ -1,13 +1,16 @@
 #Temporary name: Cut and Run
 #Project for Mini LD 59: Swap
+#May 2015
 #by Joe Cowman (In progress)
 
 import pygame
 from pygame.locals import *
 from sys import exit
+import random
 
 SCREENX, SCREENY = (1080,720)
 GAMEX,GAMEY = (320,208)
+GRIDX,GRIDY = (20,13)
 GRIDSIZE = 16
 
 BLACK = (0,0,0)
@@ -23,6 +26,8 @@ DISPLAYSURF = pygame.display.set_mode((SCREENX,SCREENY))
 
 global gameSurf
 gameSurf = pygame.Surface((GAMEX,GAMEY))
+
+tileIndex = {"a":32,"b":33,"c":34,"d":35,"e":36,"f":37,"g":38,"h":39,"i":40,"j":41,"k":42,"l":43,"m":44,"n":45,"o":46,"p":47,"q":48,"r":49,"s":50,"t":51,"u":52,"v":53,"w":54,"x":55,"y":56,"z":57,"1":58,"2":59,"3":60,"4":61,"5":62,"6":63}
 
 def get_spritesheet(filename):
     sheet = pygame.image.load(filename).convert_alpha()
@@ -79,6 +84,14 @@ def draw_grid(surf,step,width=1,color=WHITE):
         pygame.draw.line(surf,color,(0,y),(w,y),width)
 
     return surf
+
+class landform(object):
+
+    def __init__(self,terrain):
+
+        self.terrain = terrain[:]
+        self.numX = len(max(self.terrain,key=len))
+        self.numY = len(self.terrain)
         
 
 sheet1 = get_spritesheet("example1.png")
@@ -99,6 +112,7 @@ while True:
     gameSurf = draw_grid(gameSurf,GRIDSIZE)
 
     gameSurf = demo_sprites(list1,gameSurf,GRIDSIZE)
+    #gameSurf.blit(list3[tileIndex[random.choice(tileIndex.keys())]],(0,0))
     #gameSurf.blit(list1[1],(0,0))
     #gameSurf.blit(sheet1,(0,0),(16, 80, 16, 16))
 

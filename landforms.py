@@ -1,0 +1,9 @@
+#file to contain all landforms that will be generated in game
+#stored in lists of strings
+#Project for Mini LD 59: Swap
+#May 2015
+#by Joe Cowman (in progress)
+
+base5x3 =   ["qqqqq",
+                   "qqqqq",
+                   "qqqqq"]
