@@ -202,7 +202,8 @@ class Anisprite(object):
 
                     self.boundRects[r].bottom = 16
 
-        self.currentGrids = []
+        self.gridRect = Rect(0,0,0,0)
+        self.gridCoords = []
 
     def changeState(self,newState=None):
 
@@ -228,7 +229,7 @@ class Anisprite(object):
             self.state = RIGHTRUN
             self.spriteIndex = 3
 
-    def update(self,msPassed):
+    def update(self,msPassed,step=GRIDSIZE,screenDim=(GAMEX,GAMEY),gridDim=(GRIDX,GRIDY)):
 
         self.timeSinceAni += msPassed
 
@@ -267,6 +268,20 @@ class Anisprite(object):
         
         self.boundBox.x += self.x
         self.boundBox.y += self.y
+
+        x1,x2 = int(self.x),self.boundBox.right
+        y1,y2 = int(self.y),self.boundBox.bottom
+        
+        screenX,screenY = screenDim
+        gridX,gridY = gridDim
+
+        xGrids = [x1/step,x2/step]
+        yGrids = [y1/step,y2/step]
+
+        self.currentGrid = [(xGrids[0],yGrids[0]),(xGrids[1],yGrids[0]),(xGrids[0],yGrids[1]),(xGrids[1],yGrids[1])]
+        self.gridRect = Rect(xGrids[0],yGrids[0],xGrids[1]-xGrids[0],yGrids[1]-yGrids[0])
+
+        
                 
 
     def draw(self,destSurf):
@@ -332,7 +347,7 @@ while True:
 
     gameSurf.fill(LIGHTBLUE)
 
-    #gameSurf = draw_grid(gameSurf,GRIDSIZE)
+    gameSurf = draw_grid(gameSurf,GRIDSIZE)
 
     #gameSurf = demo_sprites(list1,gameSurf,GRIDSIZE)
     #gameSurf.blit(list3[tileIndex[random.choice(TILEINDEX.keys())]],(0,0))
