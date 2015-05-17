@@ -43,7 +43,7 @@ TILEINDEX = {"a":32,"b":33,"c":34,"d":35,"e":36,"f":37,"g":38,"h":39,"i":40,"j":
 #sprite ranges for each animated character
 P1o,P1 = (0,9)
 P2o,P2 = (9,18)
-P3o,P3 = (18,26)
+P3o,P3 = (18,27)
 
 def get_spritesheet(filename):
     sheet = pygame.image.load(filename).convert_alpha()
@@ -163,7 +163,7 @@ class Anisprite(object):
     #aniSpeed in ms
     #moveSpeed in pixels/s
 
-    def __init__(self,spriteSlice,initGridCoords,moveSpeed=0,aniSpeed=80,step=GRIDSIZE):
+    def __init__(self,spriteSlice,initGridCoords,moveSpeed=0,allowFloat=False,aniSpeed=80,step=GRIDSIZE):
         
         self.spriteList = spriteSlice[:] + [pygame.transform.flip(x,True,False) for x in spriteSlice[3:6]]
         
@@ -182,6 +182,25 @@ class Anisprite(object):
 
         self.boundRects = [r.get_bounding_rect() for r in self.spriteList]
         self.boundBox = (0,0,0,0)
+
+        if not allowFloat:
+
+            for r in xrange(len(self.boundRects)):
+                
+                bot = self.boundRects[r].bottom
+                
+                if bot != 16:
+                    
+                    mis = 16 - bot
+
+                    tempSurf = pygame.Surface((16,16),0,32)
+                    tempSurf.fill(COLORKEY)
+                    tempSurf.blit(self.spriteList[r],(0,mis))
+                    
+                    self.spriteList[r].fill(COLORKEY)
+                    self.spriteList[r].blit(tempSurf,(0,0))
+
+                    self.boundRects[r].bottom = 16
 
         self.currentGrids = []
 
@@ -245,6 +264,7 @@ class Anisprite(object):
         self.coords = (self.x,self.y)
 
         self.boundBox = Rect(self.boundRects[self.spriteIndex])
+        
         self.boundBox.x += self.x
         self.boundBox.y += self.y
                 
@@ -277,7 +297,7 @@ landList.append(Landform(landforms.stair6x6,list1,(14,4)))
 land1 = Landform(landforms.base5x3,list1,(0,10))
 land2 = Landform(landforms.stair6x6,list1,(5,10))
 
-player = Anisprite(list4[P1o:P1],(0,9),90)
+player = Anisprite(list4[P2o:P2],(0,9),90,True)
 
 aniList = [player]
 
