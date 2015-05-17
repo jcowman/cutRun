@@ -14,6 +14,8 @@ GAMEX,GAMEY = (320,208)
 GRIDX,GRIDY = (19,12) #For coordinates
 GRIDSIZE = 16
 
+GRAVCONSTANT = 1.5 #tiles/s^2
+
 BLACK = (0,0,0)
 WHITE = (255,255,255)
 GRAY1 = (125,125,125)
@@ -40,8 +42,8 @@ gameSurf = pygame.Surface((GAMEX,GAMEY))
 
 gameGrid = {}
 
-for x in xrange(GRIDX):
-    for y in xrange(GRIDY):
+for x in xrange(GRIDX+1):
+    for y in xrange(GRIDY+1):
         gameGrid[(x,y)] = 0
         
 
@@ -177,9 +179,9 @@ class Landform(object):
 class Anisprite(object):
 
     #aniSpeed in ms
-    #moveSpeed in pixels/s
+    #moveSpeed and jumpPower in pixels/s
 
-    def __init__(self,spriteSlice,initGridCoords,moveSpeed=0,allowFloat=False,aniSpeed=80,step=GRIDSIZE):
+    def __init__(self,spriteSlice,initGridCoords,moveSpeed=0,jumpPower=0,allowFloat=False,aniSpeed=80,step=GRIDSIZE):
         
         self.spriteList = spriteSlice[:] + [pygame.transform.flip(x,True,False) for x in spriteSlice[3:6]]
         
@@ -193,6 +195,7 @@ class Anisprite(object):
         self.timeSinceAni = 0
 
         self.moveSpeed = moveSpeed
+        self.jumpPower = jumpPower
 
         self.vx, self.vy = (0,0)
 
@@ -221,6 +224,14 @@ class Anisprite(object):
         self.gridRect = Rect(0,0,0,0)
         self.gridCoords = []
 
+        self.onSolidGround = True
+
+    def jump(self,boost=0):
+        
+        if self.onSolidGround:
+            self.vy -= (self.jumpPower+boost)
+            self.onSolidGround = False
+
     def changeState(self,newState=None):
 
         self.timeSinceAni = 0
@@ -245,7 +256,7 @@ class Anisprite(object):
             self.state = RIGHTRUN
             self.spriteIndex = 3
 
-    def update(self,msPassed,step=GRIDSIZE,screenDim=(GAMEX,GAMEY),gridDim=(GRIDX,GRIDY)):
+    def update(self,msPassed,step=GRIDSIZE,screenDim=(GAMEX,GAMEY),gridDim=(GRIDX,GRIDY),globalGrid=gameGrid):
 
         self.timeSinceAni += msPassed
 
@@ -276,7 +287,13 @@ class Anisprite(object):
 
             self.vx = self.moveSpeed
 
+        if not self.onSolidGround:
+            self.vy += float(GRAVCONSTANT*step)/msPassed**2
+        else:
+            self.vy = 0
+
         self.x += self.vx*msPassed/1000.0
+        self.y += self.vy*msPassed/1000.0
 
         self.coords = (self.x,self.y)
 
@@ -296,6 +313,19 @@ class Anisprite(object):
 
         self.currentGrid = [(xGrids[0],yGrids[0]),(xGrids[1],yGrids[0]),(xGrids[0],yGrids[1]),(xGrids[1],yGrids[1])]
         self.gridRect = Rect(xGrids[0],yGrids[0],xGrids[1]-xGrids[0],yGrids[1]-yGrids[0])
+
+        if globalGrid[self.gridRect.topright]:
+            self.x -= (self.boundBox.right - self.gridRect.right*step)
+
+        else:
+
+            if globalGrid[self.gridRect.bottomleft] or globalGrid[self.gridRect.bottomright]:
+                self.onSolidGround = True
+                self.y = self.gridRect.top*step
+            else:
+                self.onSolidGround = False
+
+        self.coords = (self.x,self.y)
                 
 
     def draw(self,destSurf):
@@ -329,7 +359,8 @@ for l in landList:
 #land1 = Landform(landforms.base5x3,list1,(0,10))
 #land2 = Landform(landforms.stair6x6,list1,(5,10))
 
-player = Anisprite(list4[P2o:P2],(0,9),90,True)
+#player = Anisprite(list4[P2o:P2],(0,9),90,90,True)
+player = Anisprite(list1[P3o:P3],(0,9),90,150,False)
 
 aniList = [player]
 
@@ -351,6 +382,9 @@ while True:
 
             if event.key == K_RIGHT:
                 player.changeState(RIGHTRUN)
+
+            if event.key == K_SPACE:
+                player.jump()
 
         elif event.type == KEYUP:
 
