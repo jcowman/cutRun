@@ -38,6 +38,13 @@ pygame.display.set_caption("CODENAME: Cut and Run")
 global gameSurf
 gameSurf = pygame.Surface((GAMEX,GAMEY))
 
+gameGrid = {}
+
+for x in xrange(GRIDX):
+    for y in xrange(GRIDY):
+        gameGrid[(x,y)] = 0
+        
+
 TILEINDEX = {"a":32,"b":33,"c":34,"d":35,"e":36,"f":37,"g":38,"h":39,"i":40,"j":41,"k":42,"l":43,"m":44,"n":45,"o":46,"p":47,"q":48,"r":49,"s":50,"t":51,"u":52,"v":53,"w":54,"x":55,"y":56,"z":57,"1":58,"2":59,"3":60,"4":61,"5":62,"6":63}
 
 #sprite ranges for each animated character
@@ -127,6 +134,15 @@ class Landform(object):
 
         self.gridCoords = gridCoords
         self.gridX,self.gridY = gridCoords
+
+    def update_grid(self,globalGrid):
+
+        for row in xrange(len(self.terrain)):
+            for column in xrange(len(self.terrain[row])):
+                if self.terrain[row][column] != "0":
+                    globalGrid[(self.gridX+column,self.gridY+row)]=self.terrain[row][column]
+
+        return globalGrid
 
     def render_surf(self,step=GRIDSIZE):
         
@@ -280,8 +296,6 @@ class Anisprite(object):
 
         self.currentGrid = [(xGrids[0],yGrids[0]),(xGrids[1],yGrids[0]),(xGrids[0],yGrids[1]),(xGrids[1],yGrids[1])]
         self.gridRect = Rect(xGrids[0],yGrids[0],xGrids[1]-xGrids[0],yGrids[1]-yGrids[0])
-
-        
                 
 
     def draw(self,destSurf):
@@ -309,8 +323,11 @@ for x in [0,5,10,15]:
 
 landList.append(Landform(landforms.stair6x6,list1,(14,4)))
 
-land1 = Landform(landforms.base5x3,list1,(0,10))
-land2 = Landform(landforms.stair6x6,list1,(5,10))
+for l in landList:
+    gameGrid = l.update_grid(gameGrid)
+
+#land1 = Landform(landforms.base5x3,list1,(0,10))
+#land2 = Landform(landforms.stair6x6,list1,(5,10))
 
 player = Anisprite(list4[P2o:P2],(0,9),90,True)
 
