@@ -7,6 +7,8 @@ import pygame
 from pygame.locals import *
 from sys import exit
 import random
+import math
+
 import landforms #made by me
 
 SCREENX, SCREENY = (1080,720)
@@ -30,6 +32,11 @@ LEFTRUN = "LeftRun"
 LEFTFACE = "LeftFace"
 RIGHTRUN = "RightRun"
 RIGHTFACE = "RightFace"
+
+UP = "Up"
+RIGHT = "Right"
+DOWN = "Down"
+LEFT = "Left"
 
 pygame.init()
 
@@ -127,22 +134,31 @@ class Landform(object):
                     self.typeList.append(c)
 
         self.typeDict = {}
+        self.rectDict = {}
 
         for t in self.typeList:
             if t != "0":
                 self.typeDict[t] = self.spriteList[TILEINDEX[t]]
+                self.rectDict[t] = self.typeDict[t].get_bounding_rect()
 
         self.surf = self.render_surf()
 
         self.gridCoords = gridCoords
         self.gridX,self.gridY = gridCoords
 
-    def update_grid(self,globalGrid):
+    def update_grid(self,globalGrid,step=GRIDSIZE):
 
         for row in xrange(len(self.terrain)):
+            
             for column in xrange(len(self.terrain[row])):
+                
                 if self.terrain[row][column] != "0":
-                    globalGrid[(self.gridX+column,self.gridY+row)]=self.terrain[row][column]
+                    
+                    boundRect = Rect(self.rectDict[self.terrain[row][column]])
+                    boundRect.x += step*(self.gridX+column)
+                    boundRect.y += step*(self.gridY+row)
+                    
+                    globalGrid[(self.gridX+column,self.gridY+row)]=boundRect
 
         return globalGrid
 
@@ -256,6 +272,38 @@ class Anisprite(object):
             self.state = RIGHTRUN
             self.spriteIndex = 3
 
+    def check_col(self,tile_coord,tiles=gameGrid):
+
+        direction = None
+        yDist = 0
+
+        tile_rect = tiles[tile_coord]
+
+        if tile_rect:
+
+            if self.boundBox.colliderect(tile_rect):
+
+                xDist = abs(self.boundBox.centerx**2 + tile_rect.centerx**2)
+                yDist = abs(self.boundBox.centery**2 + tile_rect.centery**2)
+
+                if xDist > yDist:
+
+                    if self.boundBox.centerx < tile_rect.centerx:
+                        direction = RIGHT
+
+                    else:
+                        direction = LEFT
+
+                elif yDist > xDist:
+
+                    if self.boundBox.centery < tile_rect.centery:
+                        direction = DOWN
+
+                    else:
+                        direction = UP
+
+        return (direction, yDist)
+
     def update(self,msPassed,step=GRIDSIZE,screenDim=(GAMEX,GAMEY),gridDim=(GRIDX,GRIDY),globalGrid=gameGrid):
 
         self.timeSinceAni += msPassed
@@ -302,8 +350,8 @@ class Anisprite(object):
         self.boundBox.x += self.x
         self.boundBox.y += self.y
 
-        x1,x2 = int(self.x),self.boundBox.right
-        y1,y2 = int(self.y),self.boundBox.bottom
+        x1,x2 = int(self.x),self.boundBox.right-1
+        y1,y2 = int(self.y),self.boundBox.bottom-1
         
         screenX,screenY = screenDim
         gridX,gridY = gridDim
@@ -314,20 +362,53 @@ class Anisprite(object):
         self.currentGrid = [(xGrids[0],yGrids[0]),(xGrids[1],yGrids[0]),(xGrids[0],yGrids[1]),(xGrids[1],yGrids[1])]
         self.gridRect = Rect(xGrids[0],yGrids[0],xGrids[1]-xGrids[0],yGrids[1]-yGrids[0])
 
-        if globalGrid[self.gridRect.topright]:
-            self.x -= (self.boundBox.right - self.gridRect.right*step)
+        if self.currentGrid[0] == self.currentGrid[1]:
+            del self.currentGrid[0]
 
-        else:
+        if self.currentGrid[-1] == self.currentGrid[-2]:
+            del self.currentGrid[-1]
 
-            if globalGrid[self.gridRect.bottomleft] or globalGrid[self.gridRect.bottomright]:
-                self.onSolidGround = True
-                self.y = self.gridRect.top*step
-            else:
-                self.onSolidGround = False
+        ##COLLISION DETECTION ZONE##
+
+##        if globalGrid[self.gridRect.topright]:
+##            self.x -= (self.boundBox.right - self.gridRect.right*step)
+##
+##        else:
+##
+##            if globalGrid[self.gridRect.bottomleft] or globalGrid[self.gridRect.bottomright]:
+##                self.onSolidGround = True
+##                self.y = self.gridRect.top*step
+##            else:
+##                self.onSolidGround = False
+
+        for t in self.currentGrid:
+
+            #print "hi"
+
+            try:
+            
+                colDirection, yDist = self.check_col(t)
+
+            except:
+                print self.currentGrid
+
+            if colDirection:
+            
+                if colDirection == DOWN:
+                    self.onSolidGround = True
+                    self.y -= (step-yDist)
+
+            
+
+
+        
+
+        #Check Below
+
+        ##END ZONE##
 
         self.coords = (self.x,self.y)
                 
-
     def draw(self,destSurf):
 
         destSurf.fill(RED,self.boundBox)
