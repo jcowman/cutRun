@@ -16,7 +16,7 @@ GAMEX,GAMEY = (320,208)
 GRIDX,GRIDY = (19,12) #For coordinates
 GRIDSIZE = 16
 
-GRAVCONSTANT = 1.5 #tiles/s^2
+GRAVCONSTANT = 0.5 #tiles/s^2
 
 BLACK = (0,0,0)
 WHITE = (255,255,255)
@@ -302,7 +302,7 @@ class Anisprite(object):
                     else:
                         direction = UP
 
-        return (direction, yDist)
+        return direction
 
     def update(self,msPassed,step=GRIDSIZE,screenDim=(GAMEX,GAMEY),gridDim=(GRIDX,GRIDY),globalGrid=gameGrid):
 
@@ -336,12 +336,17 @@ class Anisprite(object):
             self.vx = self.moveSpeed
 
         if not self.onSolidGround:
-            self.vy += float(GRAVCONSTANT*step)/msPassed**2
+            #self.vy += float(GRAVCONSTANT*step)/msPassed**2
+            self.vy += float(GRAVCONSTANT*step)
         else:
             self.vy = 0
 
-        self.x += self.vx*msPassed/1000.0
-        self.y += self.vy*msPassed/1000.0
+        #print self.vy,self.y
+
+        self.x += self.vx*(msPassed/1000.0)
+        self.y += self.vy*(msPassed/1000.0)
+
+        #print self.vy,self.y
 
         self.coords = (self.x,self.y)
 
@@ -381,22 +386,30 @@ class Anisprite(object):
 ##            else:
 ##                self.onSolidGround = False
 
+        #print timePassed,self.vy
+
         for t in self.currentGrid:
 
             #print "hi"
 
             try:
             
-                colDirection, yDist = self.check_col(t)
+                colDirection = self.check_col(t)
 
             except:
-                print self.currentGrid
+                print self.currentGrid, self.boundBox, self.coords, timePassed
 
             if colDirection:
+
+                foot = self.boundBox.bottom
+                #print foot, foot%step
+
             
                 if colDirection == DOWN:
                     self.onSolidGround = True
-                    self.y -= (step-yDist)
+                    tileY = int(self.y/step)
+                    print tileY
+                    self.y = tileY*step
 
             
 
@@ -441,7 +454,7 @@ for l in landList:
 #land2 = Landform(landforms.stair6x6,list1,(5,10))
 
 #player = Anisprite(list4[P2o:P2],(0,9),90,90,True)
-player = Anisprite(list1[P3o:P3],(0,9),90,150,False)
+player = Anisprite(list1[P3o:P3],(0,9),90,200,False)
 
 aniList = [player]
 
