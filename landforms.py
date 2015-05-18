@@ -14,3 +14,9 @@ stair6x6 = ["00000j",
                  "00jjjj",
                  "0jjjjj",
                   "jjjjjj"]
+
+floatform = ["gggg",
+                 "0000",
+                 "a00b",
+                  "b00a",
+                  "c00c"]
