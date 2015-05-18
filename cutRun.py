@@ -16,7 +16,7 @@ GAMEX,GAMEY = (320,208)
 GRIDX,GRIDY = (19,12) #For coordinates
 GRIDSIZE = 16
 
-GRAVCONSTANT = 0.5 #tiles/s^2
+GRAVCONSTANT = 0.08 #tiles/s^2
 
 BLACK = (0,0,0)
 WHITE = (255,255,255)
@@ -283,8 +283,27 @@ class Anisprite(object):
 
             if self.boundBox.colliderect(tile_rect):
 
-                xDist = abs(self.boundBox.centerx**2 + tile_rect.centerx**2)
-                yDist = abs(self.boundBox.centery**2 + tile_rect.centery**2)
+##                xDist = abs(self.boundBox.centerx**2 + tile_rect.centerx**2)
+##                yDist = abs(self.boundBox.centery**2 + tile_rect.centery**2)
+##
+##                if xDist > yDist:
+##
+##                    if self.boundBox.centerx < tile_rect.centerx:
+##                        direction = RIGHT
+##
+##                    else:
+##                        direction = LEFT
+##
+##                elif yDist > xDist:
+##
+##                    if self.boundBox.centery < tile_rect.centery:
+##                        direction = DOWN
+##
+##                    else:
+##                        direction = UP
+
+                xDist = abs(self.boundBox.centerx - tile_rect.centerx)
+                yDist = abs(self.boundBox.centery - tile_rect.centery)
 
                 if xDist > yDist:
 
@@ -301,6 +320,7 @@ class Anisprite(object):
 
                     else:
                         direction = UP
+
 
         return direction
 
@@ -335,11 +355,13 @@ class Anisprite(object):
 
             self.vx = self.moveSpeed
 
-        if not self.onSolidGround:
-            #self.vy += float(GRAVCONSTANT*step)/msPassed**2
-            self.vy += float(GRAVCONSTANT*step)
-        else:
-            self.vy = 0
+##        if not self.onSolidGround:
+##            #self.vy += float(GRAVCONSTANT*step)/msPassed**2
+##            self.vy += float(GRAVCONSTANT*step)
+##        else:
+##            self.vy = 0
+
+        self.vy += float(GRAVCONSTANT*step)
 
         #print self.vy,self.y
 
@@ -408,8 +430,11 @@ class Anisprite(object):
                 if colDirection == DOWN:
                     self.onSolidGround = True
                     tileY = int(self.y/step)
-                    print tileY
+                    #print tileY
                     self.y = tileY*step
+                    self.vy = 0
+
+            
 
             
 
