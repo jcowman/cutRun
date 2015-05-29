@@ -19,6 +19,7 @@ GRIDX,GRIDY = (19,12) #For coordinates
 GRIDSIZE = 16
 
 GRAVCONSTANT = 20 #tiles/s^2
+GRIDSPEED = 1 #sec/shift
 
 BLACK = (0,0,0)
 WHITE = (255,255,255)
@@ -486,6 +487,9 @@ player = Anisprite(list1[P1o:P1],(0,9),90,206,False)
 
 aniList = [player]
 
+gridSpeed = GRIDSPEED
+timeSinceGridShift = 0
+
 clock = pygame.time.Clock()
 timePassed = clock.tick()
 timePassedSeconds = timePassed/1000.
@@ -539,11 +543,13 @@ while True:
             for l in landList:
                 l.change_grid(event.x,event.y)
                 gameGrid = l.update_grid(gameGrid)
+
+            player.changePos(event.x*GRIDSIZE,event.y*GRIDSIZE)
             
 
     gameSurf.fill(LIGHTBLUE)
 
-    gameSurf = draw_grid(gameSurf,GRIDSIZE)
+    #gameSurf = draw_grid(gameSurf,GRIDSIZE)
 
     #gameSurf = demo_sprites(list1,gameSurf,GRIDSIZE)
     #gameSurf.blit(list3[tileIndex[random.choice(TILEINDEX.keys())]],(0,0))
@@ -567,15 +573,22 @@ while True:
         
     pygame.display.update()
 
-    if abs(PLAYEROFFSETX) >= GRIDSIZE:
-        if PLAYEROFFSETX > 0:
-            pygame.event.post(pygame.event.Event(CHANGETILEEVENT,x=-1,y=0))
-        else:
-            pygame.event.post(pygame.event.Event(CHANGETILEEVENT,x=1,y=0))
-        PLAYEROFFSETX = 0
+##    if abs(PLAYEROFFSETX) >= GRIDSIZE:  #sort of relative movement
+##        if PLAYEROFFSETX > 0:
+##            pygame.event.post(pygame.event.Event(CHANGETILEEVENT,x=-1,y=0))
+##        else:
+##            pygame.event.post(pygame.event.Event(CHANGETILEEVENT,x=1,y=0))
+##        PLAYEROFFSETX = 0
+
+    timeSinceGridShift += timePassedSeconds
+
+    if timeSinceGridShift >= gridSpeed:
+        pygame.event.post(pygame.event.Event(CHANGETILEEVENT,x=-1,y=0))
+        timeSinceGridShift = 0
 
     timePassed = clock.tick(FPS)
     timePassedSeconds = timePassed/1000.
+
 
 ##    print timePassedSeconds
 ##
