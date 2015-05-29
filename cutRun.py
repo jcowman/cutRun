@@ -488,7 +488,7 @@ player = Anisprite(list1[P1o:P1],(0,9),90,206,False)
 aniList = [player]
 
 gridSpeed = GRIDSPEED
-timeSinceGridShift = 0
+timeSinceGridShift = 0.
 
 clock = pygame.time.Clock()
 timePassed = clock.tick()
@@ -566,8 +566,12 @@ while True:
         PLAYEROFFSETX += a.update(timePassed)
         gameSurf = a.draw(gameSurf)
 
+    timeSinceGridShift += timePassedSeconds
+
     if (SCREENX,SCREENY) != (GAMEX,GAMEY):
-        pygame.transform.scale(gameSurf,(SCREENX,SCREENY),DISPLAYSURF)
+        offset = -GRIDSIZE*(timeSinceGridShift/gridSpeed)*(SCREENX/float(GAMEX))
+        newSurf = pygame.transform.scale(gameSurf,(SCREENX,SCREENY))
+        DISPLAYSURF.blit(newSurf,(offset,0))
     else:
         DISPLAYSURF.blit(gameSurf,(0,0))
         
@@ -580,7 +584,6 @@ while True:
 ##            pygame.event.post(pygame.event.Event(CHANGETILEEVENT,x=1,y=0))
 ##        PLAYEROFFSETX = 0
 
-    timeSinceGridShift += timePassedSeconds
 
     if timeSinceGridShift >= gridSpeed:
         pygame.event.post(pygame.event.Event(CHANGETILEEVENT,x=-1,y=0))
