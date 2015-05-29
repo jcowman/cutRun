@@ -284,25 +284,6 @@ class Anisprite(object):
 
             if self.boundBox.colliderect(tile_rect):
 
-##                xDist = abs(self.boundBox.centerx**2 + tile_rect.centerx**2)
-##                yDist = abs(self.boundBox.centery**2 + tile_rect.centery**2)
-##
-##                if xDist > yDist:
-##
-##                    if self.boundBox.centerx < tile_rect.centerx:
-##                        direction = RIGHT
-##
-##                    else:
-##                        direction = LEFT
-##
-##                elif yDist > xDist:
-##
-##                    if self.boundBox.centery < tile_rect.centery:
-##                        direction = DOWN
-##
-##                    else:
-##                        direction = UP
-
                 xDist = abs(self.boundBox.centerx - tile_rect.centerx)
                 yDist = abs(self.boundBox.centery - tile_rect.centery)
 
@@ -315,8 +296,6 @@ class Anisprite(object):
                         direction = LEFT
 
                 elif yDist > xDist:
-
-                    #if self.state != LEFTFACE and self.state != RIGHTFACE:
 
                     if self.boundBox.centery < tile_rect.centery:
                         
@@ -362,23 +341,10 @@ class Anisprite(object):
 
             self.vx = self.moveSpeed
 
-##        if not self.onSolidGround:
-##            #self.vy += float(GRAVCONSTANT*step)/msPassed**2
-##            self.vy += float(GRAVCONSTANT*step)
-##        else:
-##            self.vy = 0
-
-
         self.vy += float(GRAVCONSTANT*step)
 
-        #print self.vy,self.y
-
-       # if not (self.currentCollide == RIGHT or self.currentCollide == LEFT):
         self.x += self.vx*(msPassed/1000.0)
-            
         self.y += self.vy*(msPassed/1000.0)
-
-        #print self.vy,self.y
 
         self.coords = (self.x,self.y)
 
@@ -405,24 +371,7 @@ class Anisprite(object):
         if self.currentGrid[-1] == self.currentGrid[-2]:
             del self.currentGrid[-1]
 
-        ##COLLISION DETECTION ZONE##
-
-##        if globalGrid[self.gridRect.topright]:
-##            self.x -= (self.boundBox.right - self.gridRect.right*step)
-##
-##        else:
-##
-##            if globalGrid[self.gridRect.bottomleft] or globalGrid[self.gridRect.bottomright]:
-##                self.onSolidGround = True
-##                self.y = self.gridRect.top*step
-##            else:
-##                self.onSolidGround = False
-
-        #print timePassed,self.vy
-
         for t in self.currentGrid:
-
-            #print "hi"
 
             try:
             
@@ -433,49 +382,24 @@ class Anisprite(object):
 
             if colDirection:
 
-                #print colDirection
 
                 tileBox = globalGrid[t]
 
                 foot = self.boundBox.bottom
-                #print foot, foot%step
-
-                #print tileBox
 
                 self.currentCollide = colDirection
 
             
                 if colDirection == DOWN:
-
-##                    try:
-##                        floor = globalGrid[(t[0]-1,t[1]+1)]
-##                    except:
-##                        globalGrid[(t[0]-1,t[1]+1)] = 0
-##                        floor = 0
-##
-##                    if floor:
-##                        print "should stop"
-
-
-                    
-
-                    
                     tileY = int(self.y/step)
-                    #print tileY
                     self.y = tileY*step
                     self.vy = 0
                     self.onSolidGround = True
-
-
-
-                #else:
-                    #self.onSolidGround = False
 
                 if colDirection == RIGHT:
                     tileX = int(self.x/step)
                     self.x = tileBox.left - (step-self.boundBox.right%step)
                     self.vx = 0
-                    #self.changeState(RIGHTFACE)
 
                 if colDirection == UP:
                     tileY = int(self.y/step) + 1
@@ -486,29 +410,6 @@ class Anisprite(object):
                     tileX = int(self.x/step) + 1
                     self.vx = 0
                     self.x = tileBox.right - (step-self.boundBox.width)*0.5
-                    #self.changeState(LEFTFACE)
-
-                #self.currentCollide = colDirection
-
-##                if self.state == RIGHTFACE:
-##                    self.changeState(RIGHTRUN)
-##
-##                if self.state == LEFTFACE:
-##                    self.changeState(LEFTRUN)
-##
-##                self.currentCollide = colDirection
-
-
-            
-
-            
-
-
-        
-
-        #Check Below
-
-        ##END ZONE##
 
         self.coords = (self.x,self.y)
                 
