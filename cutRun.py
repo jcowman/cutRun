@@ -16,7 +16,7 @@ GAMEX,GAMEY = (320,208)
 GRIDX,GRIDY = (19,12) #For coordinates
 GRIDSIZE = 16
 
-GRAVCONSTANT = 0.08 #tiles/s^2
+GRAVCONSTANT = 0.16 #tiles/s^2
 
 BLACK = (0,0,0)
 WHITE = (255,255,255)
@@ -241,6 +241,7 @@ class Anisprite(object):
         self.gridCoords = []
 
         self.onSolidGround = True
+        self.currentCollide = None
 
     def jump(self,boost=0):
         
@@ -315,11 +316,17 @@ class Anisprite(object):
 
                 elif yDist > xDist:
 
+                    #if self.state != LEFTFACE and self.state != RIGHTFACE:
+
                     if self.boundBox.centery < tile_rect.centery:
-                        direction = DOWN
+                        
+                        if tile_rect.collidepoint(self.boundBox.midbottom):
+                            direction = DOWN
 
                     else:
-                        direction = UP
+                        
+                        if tile_rect.collidepoint(self.boundBox.midtop):
+                            direction = UP
 
 
         return direction
@@ -361,11 +368,14 @@ class Anisprite(object):
 ##        else:
 ##            self.vy = 0
 
+
         self.vy += float(GRAVCONSTANT*step)
 
         #print self.vy,self.y
 
+       # if not (self.currentCollide == RIGHT or self.currentCollide == LEFT):
         self.x += self.vx*(msPassed/1000.0)
+            
         self.y += self.vy*(msPassed/1000.0)
 
         #print self.vy,self.y
@@ -430,17 +440,40 @@ class Anisprite(object):
                 foot = self.boundBox.bottom
                 #print foot, foot%step
 
+                #print tileBox
+
+                self.currentCollide = colDirection
+
             
                 if colDirection == DOWN:
-                    self.onSolidGround = True
+
+##                    try:
+##                        floor = globalGrid[(t[0]-1,t[1]+1)]
+##                    except:
+##                        globalGrid[(t[0]-1,t[1]+1)] = 0
+##                        floor = 0
+##
+##                    if floor:
+##                        print "should stop"
+
+
+                    
+
+                    
                     tileY = int(self.y/step)
                     #print tileY
                     self.y = tileY*step
                     self.vy = 0
+                    self.onSolidGround = True
+
+
+
+                else:
+                    self.onSolidGround = False
 
                 if colDirection == RIGHT:
                     tileX = int(self.x/step)
-                    self.x = tileBox.left - self.boundBox.width - (step-self.boundBox.width)*0.5
+                    self.x = tileBox.left - (step-self.boundBox.right%step)
                     self.vx = 0
                     #self.changeState(RIGHTFACE)
 
@@ -453,6 +486,18 @@ class Anisprite(object):
                     tileX = int(self.x/step) + 1
                     self.vx = 0
                     self.x = tileBox.right - (step-self.boundBox.width)*0.5
+                    #self.changeState(LEFTFACE)
+
+                #self.currentCollide = colDirection
+
+##                if self.state == RIGHTFACE:
+##                    self.changeState(RIGHTRUN)
+##
+##                if self.state == LEFTFACE:
+##                    self.changeState(LEFTRUN)
+##
+##                self.currentCollide = colDirection
+
 
             
 
