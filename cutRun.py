@@ -16,7 +16,7 @@ GAMEX,GAMEY = (320,208)
 GRIDX,GRIDY = (19,12) #For coordinates
 GRIDSIZE = 16
 
-GRAVCONSTANT = 0.16 #tiles/s^2
+GRAVCONSTANT = 0.10 #tiles/s^2
 
 BLACK = (0,0,0)
 WHITE = (255,255,255)
@@ -468,8 +468,8 @@ class Anisprite(object):
 
 
 
-                else:
-                    self.onSolidGround = False
+                #else:
+                    #self.onSolidGround = False
 
                 if colDirection == RIGHT:
                     tileX = int(self.x/step)
