@@ -54,7 +54,11 @@ gameGrid = {}
 for x in xrange(GRIDX+1):
     for y in xrange(GRIDY+1):
         gameGrid[(x,y)] = 0
-        
+
+global PLAYEROFFSETX
+PLAYEROFFSETX = 0
+
+CHANGETILEEVENT = USEREVENT + 1
 
 TILEINDEX = {"a":32,"b":33,"c":34,"d":35,"e":36,"f":37,"g":38,"h":39,"i":40,"j":41,"k":42,"l":43,"m":44,"n":45,"o":46,"p":47,"q":48,"r":49,"s":50,"t":51,"u":52,"v":53,"w":54,"x":55,"y":56,"z":57,"1":58,"2":59,"3":60,"4":61,"5":62,"6":63}
 
@@ -148,6 +152,11 @@ class Landform(object):
         self.gridCoords = gridCoords
         self.gridX,self.gridY = gridCoords
 
+    def change_grid(self,x=0,y=0):
+        self.gridX += x
+        self.gridY += y
+        self.gridCoords = (self.gridX,self.gridY)
+
     def update_grid(self,globalGrid,step=GRIDSIZE):
 
         for row in xrange(len(self.terrain)):
@@ -186,9 +195,9 @@ class Landform(object):
 
         return surf
 
-    def blit_surf(self,destSurf,step=GRIDSIZE):
+    def blit_surf(self,destSurf,xOffset=0,step=GRIDSIZE):
         
-        self.globalX,self.globalY = self.gridX*step,self.gridY*step
+        self.globalX,self.globalY = self.gridX*step+xOffset,self.gridY*step
         
         destSurf.blit(self.surf,(self.globalX,self.globalY))
 
@@ -244,6 +253,13 @@ class Anisprite(object):
 
         self.onSolidGround = True
         self.currentCollide = None
+
+    def changePos(self,deltaX=0,deltaY=0):
+        self.x += deltaX
+        self.y += deltaY
+
+        self.coords = (self.x,self.y)
+        #self.boundBox
 
     def jump(self,boost=0):
         
@@ -423,6 +439,8 @@ class Anisprite(object):
                     self.x = tileBox.right - (step-self.boundBox.width)*0.5
 
         self.coords = (self.x,self.y)
+
+        return self.vx*(msPassed/1000.0)
                 
     def draw(self,destSurf):
 
@@ -453,8 +471,12 @@ landList.append(Landform(landforms.floatform,list1,(3,4)))
 
 landList.append(Landform(landforms.plat3x1,list1,(9,7)))
 
+landList.append(Landform(landforms.base5x3,list1,(19,5)))
+
 for l in landList:
     gameGrid = l.update_grid(gameGrid)
+
+#print gameGrid
 
 #land1 = Landform(landforms.base5x3,list1,(0,10))
 #land2 = Landform(landforms.stair6x6,list1,(5,10))
@@ -486,6 +508,18 @@ while True:
             if event.key == K_SPACE:
                 player.jump()
 
+            if event.key == K_RETURN:
+
+                for x in xrange(GRIDX+1):
+                    for y in xrange(GRIDY+1):
+                        gameGrid[(x,y)] = 0
+                        
+                for l in landList:
+                    l.change_grid(-1)
+                    gameGrid = l.update_grid(gameGrid)
+
+                player.changePos(-GRIDSIZE)
+
         elif event.type == KEYUP:
 
             if event.key == K_LEFT:
@@ -495,6 +529,17 @@ while True:
             if event.key == K_RIGHT:
                 if player.state == RIGHTRUN:
                     player.changeState(IDLE)
+
+        elif event.type == CHANGETILEEVENT:
+            
+            for x in xrange(GRIDX+1):
+                for y in xrange(GRIDY+1):
+                    gameGrid[(x,y)] = 0
+
+            for l in landList:
+                l.change_grid(event.x,event.y)
+                gameGrid = l.update_grid(gameGrid)
+            
 
     gameSurf.fill(LIGHTBLUE)
 
@@ -512,7 +557,7 @@ while True:
     #gameSurf = land2.blit_surf(gameSurf)
 
     for a in aniList:
-        a.update(timePassed)
+        PLAYEROFFSETX += a.update(timePassed)
         gameSurf = a.draw(gameSurf)
 
     if (SCREENX,SCREENY) != (GAMEX,GAMEY):
@@ -521,6 +566,13 @@ while True:
         DISPLAYSURF.blit(gameSurf,(0,0))
         
     pygame.display.update()
+
+    if abs(PLAYEROFFSETX) >= GRIDSIZE:
+        if PLAYEROFFSETX > 0:
+            pygame.event.post(pygame.event.Event(CHANGETILEEVENT,x=-1,y=0))
+        else:
+            pygame.event.post(pygame.event.Event(CHANGETILEEVENT,x=1,y=0))
+        PLAYEROFFSETX = 0
 
     timePassed = clock.tick(FPS)
     timePassedSeconds = timePassed/1000.
