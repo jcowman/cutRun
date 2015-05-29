@@ -423,6 +423,8 @@ class Anisprite(object):
 
             if colDirection:
 
+                #print colDirection
+
                 tileBox = globalGrid[t]
 
                 foot = self.boundBox.bottom
@@ -441,6 +443,16 @@ class Anisprite(object):
                     self.x = tileBox.left - self.boundBox.width - (step-self.boundBox.width)*0.5
                     self.vx = 0
                     #self.changeState(RIGHTFACE)
+
+                if colDirection == UP:
+                    tileY = int(self.y/step) + 1
+                    self.vy = 0
+                    self.y = tileBox.bottom - (step-self.boundBox.top%step)
+
+                if colDirection == LEFT:
+                    tileX = int(self.x/step) + 1
+                    self.vx = 0
+                    self.x = tileBox.right - (step-self.boundBox.width)*0.5
 
             
 
@@ -482,13 +494,15 @@ landList.append(Landform(landforms.stair6x6,list1,(14,4)))
 
 landList.append(Landform(landforms.floatform,list1,(3,4)))
 
+landList.append(Landform(landforms.plat3x1,list1,(9,7)))
+
 for l in landList:
     gameGrid = l.update_grid(gameGrid)
 
 #land1 = Landform(landforms.base5x3,list1,(0,10))
 #land2 = Landform(landforms.stair6x6,list1,(5,10))
 
-#player = Anisprite(list4[P2o:P2],(0,9),90,90,True)
+#player = Anisprite(list4[P2o:P2],(0,9),90,200,True)
 player = Anisprite(list1[P1o:P1],(0,9),90,200,False)
 
 aniList = [player]

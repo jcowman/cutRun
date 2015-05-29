@@ -20,3 +20,5 @@ floatform = ["gggg",
                  "a00b",
                   "b00a",
                   "c00c"]
+
+plat3x1 = ["www"]
