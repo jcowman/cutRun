@@ -11,12 +11,14 @@ import math
 
 import landforms #made by me
 
+FPS = 60
+
 SCREENX, SCREENY = (1080,720)
 GAMEX,GAMEY = (320,208)
 GRIDX,GRIDY = (19,12) #For coordinates
 GRIDSIZE = 16
 
-GRAVCONSTANT = 0.10 #tiles/s^2
+GRAVCONSTANT = 20 #tiles/s^2
 
 BLACK = (0,0,0)
 WHITE = (255,255,255)
@@ -246,8 +248,9 @@ class Anisprite(object):
     def jump(self,boost=0):
         
         if self.onSolidGround:
-            self.vy -= (self.jumpPower+boost)
+            self.vy = -(self.jumpPower+boost)
             self.onSolidGround = False
+            #print self.vy
 
     def changeState(self,newState=None):
 
@@ -312,6 +315,9 @@ class Anisprite(object):
 
     def update(self,msPassed,step=GRIDSIZE,screenDim=(GAMEX,GAMEY),gridDim=(GRIDX,GRIDY),globalGrid=gameGrid):
 
+
+        msPassed = min(msPassed,1000./FPS)
+
         self.timeSinceAni += msPassed
 
         if self.state == IDLE:
@@ -341,7 +347,7 @@ class Anisprite(object):
 
             self.vx = self.moveSpeed
 
-        self.vy += float(GRAVCONSTANT*step)
+        self.vy += float(GRAVCONSTANT*step)*(msPassed/1000.0)
 
         self.x += self.vx*(msPassed/1000.0)
         self.y += self.vy*(msPassed/1000.0)
@@ -374,7 +380,12 @@ class Anisprite(object):
         for t in self.currentGrid:
 
             try:
-            
+                globalGrid[t]
+
+            except:
+                globalGrid[t] = 0
+
+            try:
                 colDirection = self.check_col(t)
 
             except:
@@ -449,7 +460,7 @@ for l in landList:
 #land2 = Landform(landforms.stair6x6,list1,(5,10))
 
 #player = Anisprite(list4[P2o:P2],(0,9),90,200,True)
-player = Anisprite(list1[P1o:P1],(0,9),90,200,False)
+player = Anisprite(list1[P1o:P1],(0,9),90,206,False)
 
 aniList = [player]
 
@@ -511,5 +522,10 @@ while True:
         
     pygame.display.update()
 
-    timePassed = clock.tick()
+    timePassed = clock.tick(FPS)
     timePassedSeconds = timePassed/1000.
+
+##    print timePassedSeconds
+##
+##    for x in xrange(50):
+##        print
