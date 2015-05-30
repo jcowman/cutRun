@@ -436,6 +436,7 @@ class Anisprite(object):
                     tileX = int(self.x/step)
                     self.x = tileBox.left - self.boundBox.width - (step-self.boundBox.width)*0.5
                     self.vx = 0
+                    self.onSolidGround = True
 
                 if colDirection == UP:
                     tileY = int(self.y/step) + 1
@@ -446,6 +447,7 @@ class Anisprite(object):
                     tileX = int(self.x/step) + 1
                     self.vx = 0
                     self.x = tileBox.right - (step-self.boundBox.width)*0.5
+                    self.onSolidGround = True
 
 
         self.coords = (self.x,self.y)
@@ -490,18 +492,18 @@ def genGround(segmentLength,noiseFactor,spriteLists,startY,startX):
 
         deltaX = random.randint(-1,1)*random.randint(0,noiseFactor+int((random.random()**2)*random.randint(0,noiseFactor**2)))
 
-        if deltaX > 0:
-            deltaX = deltaX/random.randint(1,2)
-
         x += deltaX
 
         x = max(x,1)
+
+        if x > 5:
+            if random.randint(0,1):
+                x = x/random.randint(1,x)
 
         if x + currentLength > segmentLength:
             x = segmentLength - currentLength
 
         currentLength += x
-
 
         y = lastY
 
@@ -510,6 +512,7 @@ def genGround(segmentLength,noiseFactor,spriteLists,startY,startX):
         y += deltaY
 
         y = max(y,1)
+        y = min(y,GRIDY-2)
 
         dimList.append((x,y))
         lastY =  y
@@ -575,7 +578,7 @@ list4 = get_sprites(sheet4,GRIDSIZE)
 landList = []
 
 #for x in xrange(10):
-landList += genGround(100,10,[list1,list2,list3,list4],3,0)
+landList += genGround(1000,10,[list1,list2,list3,list4],3,0)
 
 """
 
