@@ -496,9 +496,9 @@ def genGround(segmentLength,noiseFactor,spriteLists,startY,startX):
 
         x = max(x,1)
 
-        if x > 5:
-            if random.randint(0,1):
-                x = x/random.randint(1,x)
+        if x > 8:
+            x = x/random.randint(1,x)
+
 
         if x + currentLength > segmentLength:
             x = segmentLength - currentLength
