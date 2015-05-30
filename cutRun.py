@@ -62,6 +62,7 @@ PLAYEROFFSETX = 0
 CHANGETILEEVENT = USEREVENT + 1
 
 TILEINDEX = {"a":32,"b":33,"c":34,"d":35,"e":36,"f":37,"g":38,"h":39,"i":40,"j":41,"k":42,"l":43,"m":44,"n":45,"o":46,"p":47,"q":48,"r":49,"s":50,"t":51,"u":52,"v":53,"w":54,"x":55,"y":56,"z":57,"1":58,"2":59,"3":60,"4":61,"5":62,"6":63}
+TERRAINLISTS = [["b","a","c","d","e","f","g","h"],["j","i","k","l","m","n","o","p"],["q","r","s","t"],["u","v","w","x"],["y","z"],["1","2","3","4","5"],["6"]]
 
 #sprite ranges for each animated character
 P1o,P1 = (0,9)
@@ -470,6 +471,105 @@ def pruneGrid(gameGrid,leftLimit,bottomLimit):
 
         if y >= bottomLimit:
             del gameGrid[t]
+
+def genGround(segmentLength,noiseFactor,spriteLists):
+    
+    currentLength = 0
+    dimList = []
+    stringList = []
+    terrainList = []
+
+    lastY = 3 #default
+
+    while currentLength < segmentLength:
+
+        #X Calculation
+
+        x = 8 #default
+        deltaX = 0
+
+        deltaX = random.randint(-1,1)*random.randint(0,noiseFactor+int((random.random()**2)*random.randint(0,noiseFactor**2)))
+
+        x += deltaX
+
+        x = max(x,1)
+
+        if x + currentLength > segmentLength:
+            x = segmentLength - currentLength
+
+        currentLength += x
+
+        #Y Calculation
+
+##        y = 3 #default
+##        
+##        yNoise = random.randint(-1,1)
+##        
+##        if yNoise == -1:
+##            deltaY = random.randint(-2,-1)
+##        elif yNoise == 1:
+##            deltaY = int(random.random()*random.randint(1,7))
+##        else:
+##            deltaY = 0
+##
+##        y += deltaY
+
+        y = lastY
+
+        deltaY = int(random.randint(-1,1)*(random.random()*random.randint(0,y)+random.random()*random.randint(0,noiseFactor)))
+
+        y += deltaY
+
+        y = max(y,1)
+
+##        if deltaY:
+##
+##            if deltaY < 0:
+##
+##                deltaY = -1*(random.random()*random.randint(0,y)+random.random()*random.randint(0,noiseFactor))
+        
+
+        dimList.append((x,y))
+        lastY =  y
+
+    for d in dimList:
+
+        s = []
+
+        c = random.randint(1,50)
+
+        if c > 1:
+            n = random.randint(0,3)
+
+            s = [random.choice(TERRAINLISTS[n])*d[0]]*d[1] #set terrain to default char
+
+            for x in xrange(random.randint(0,d[0]*d[1])):
+                if random.randint(0,noiseFactor**2)*0.5 > noiseFactor:
+                    row = random.randint(0,len(s)-1)
+                    index = random.randint(0,len(s[row])-1)
+                    new = random.choice(TERRAINLISTS[n])
+
+                    try:
+                        s[row] = s[row][0:index] + new + s[row][index+1:]
+                    except:
+                        s[row] = s[row][:-1] + new
+
+        else:
+            n = random.randint(4,6)
+
+            s = [random.choice(TERRAINLISTS[n])*d[0]]*d[1] #set terrain to default char
+
+        stringList.append(s)
+
+    
+
+    return stringList
+
+
+for x in xrange(10):
+    print genGround(20,8,5)
+
+"""
         
 
 sheet1 = get_spritesheet("example1.png")
@@ -493,6 +593,8 @@ landList.append(Landform(landforms.floatform,list1,(3,4)))
 landList.append(Landform(landforms.plat3x1,list1,(9,7)))
 
 landList.append(Landform(landforms.base5x3,list1,(19,5)))
+
+#landList.append(Landform(["m"*100],list4,(20,4)))
 
 for l in landList:
     gameGrid = l.update_grid(gameGrid)
@@ -616,3 +718,4 @@ while True:
 
     timePassed = clock.tick(FPS)
     timePassedSeconds = timePassed/1000.
+"""
