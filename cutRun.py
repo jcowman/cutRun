@@ -19,7 +19,7 @@ GRIDX,GRIDY = (19,12) #For coordinates, so there are actually 1 more of each til
 GRIDSIZE = 16
 
 GRAVCONSTANT = 20 #tiles/s^2
-GRIDSPEED = 1 #sec/shift
+GRIDSPEED = 0.5 #sec/shift
 
 BLACK = (0,0,0)
 WHITE = (255,255,255)
@@ -472,23 +472,26 @@ def pruneGrid(gameGrid,leftLimit,bottomLimit):
         if y >= bottomLimit:
             del gameGrid[t]
 
-def genGround(segmentLength,noiseFactor,spriteLists):
+def genGround(segmentLength,noiseFactor,spriteLists,startY,startX):
     
     currentLength = 0
     dimList = []
     stringList = []
     terrainList = []
 
-    lastY = 3 #default
+    lastY = startY #default
 
     while currentLength < segmentLength:
 
         #X Calculation
 
-        x = 8 #default
+        x = 5 #default
         deltaX = 0
 
         deltaX = random.randint(-1,1)*random.randint(0,noiseFactor+int((random.random()**2)*random.randint(0,noiseFactor**2)))
+
+        if deltaX > 0:
+            deltaX = deltaX/random.randint(1,2)
 
         x += deltaX
 
@@ -499,20 +502,6 @@ def genGround(segmentLength,noiseFactor,spriteLists):
 
         currentLength += x
 
-        #Y Calculation
-
-##        y = 3 #default
-##        
-##        yNoise = random.randint(-1,1)
-##        
-##        if yNoise == -1:
-##            deltaY = random.randint(-2,-1)
-##        elif yNoise == 1:
-##            deltaY = int(random.random()*random.randint(1,7))
-##        else:
-##            deltaY = 0
-##
-##        y += deltaY
 
         y = lastY
 
@@ -521,13 +510,6 @@ def genGround(segmentLength,noiseFactor,spriteLists):
         y += deltaY
 
         y = max(y,1)
-
-##        if deltaY:
-##
-##            if deltaY < 0:
-##
-##                deltaY = -1*(random.random()*random.randint(0,y)+random.random()*random.randint(0,noiseFactor))
-        
 
         dimList.append((x,y))
         lastY =  y
@@ -561,15 +543,24 @@ def genGround(segmentLength,noiseFactor,spriteLists):
 
         stringList.append(s)
 
+    possibleLists = [spriteLists[0]]
+    otherLists = spriteLists[1:]
+
+    for x in xrange(0,min(len(otherLists),random.randint(0,noiseFactor))):
+        possibleLists.append(otherLists.pop(random.randint(0,len(otherLists)-1)))
+
+    xStep = startX
+    yFloor = GRIDY + 1
     
+    for t in xrange(len(stringList)):
 
-    return stringList
+        terrainList.append(Landform(stringList[t],random.choice(possibleLists),(xStep,yFloor-dimList[t][1])))
+        xStep += dimList[t][0]
+
+    return terrainList
 
 
-for x in xrange(10):
-    print genGround(20,8,5)
-
-"""
+#"""
         
 
 sheet1 = get_spritesheet("example1.png")
@@ -583,6 +574,11 @@ list4 = get_sprites(sheet4,GRIDSIZE)
 
 landList = []
 
+#for x in xrange(10):
+landList += genGround(100,10,[list1,list2,list3,list4],3,0)
+
+"""
+
 for x in [0,5,10,15]:
     landList.append(Landform(landforms.base5x3,list1,(x,10)))
 
@@ -595,6 +591,8 @@ landList.append(Landform(landforms.plat3x1,list1,(9,7)))
 landList.append(Landform(landforms.base5x3,list1,(19,5)))
 
 #landList.append(Landform(["m"*100],list4,(20,4)))
+
+"""
 
 for l in landList:
     gameGrid = l.update_grid(gameGrid)
@@ -718,4 +716,4 @@ while True:
 
     timePassed = clock.tick(FPS)
     timePassedSeconds = timePassed/1000.
-"""
+#"""
