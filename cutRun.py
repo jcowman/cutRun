@@ -433,7 +433,6 @@ class Anisprite(object):
 
                 if colDirection == RIGHT:
                     tileX = int(self.x/step)
-                    #self.x = tileBox.left - (step-self.boundBox.right%step)
                     self.x = tileBox.left - self.boundBox.width - (step-self.boundBox.width)*0.5
                     self.vx = 0
 
@@ -446,7 +445,7 @@ class Anisprite(object):
                     tileX = int(self.x/step) + 1
                     self.vx = 0
                     self.x = tileBox.right - (step-self.boundBox.width)*0.5
-                    #self.x = tileBox.right - (step-self.boundBox.left%step)
+
 
         self.coords = (self.x,self.y)
 
@@ -471,36 +470,6 @@ def pruneGrid(gameGrid,leftLimit,bottomLimit):
 
         if y >= bottomLimit:
             del gameGrid[t]
-
-def drawColumnSurf(gameGrid,column,numY=GRIDY+1,stepSize=GRIDSIZE):
-
-    tempSurf = pygame.Surface((stepSize,numY*stepSize),0,32)
-
-    tempSurf.fill(COLORKEY)
-    tempSurf.set_colorkey(COLORKEY)
-
-    for t in gameGrid.keys():
-
-        x,y = t
-
-        if x == column:
-
-            if gameGrid[t]:
-
-                #print gameGrid[t]
-
-                tempSurf.blit(gameGrid[t][1],(0,y*stepSize))
-
-    return tempSurf
-
-def drawColumn(displaySurf,coords,gameGrid,column,stepSize=GRIDSIZE):
-
-    for t in gameGrid.keys():
-
-        x,y = t
-
-        if x == column:
-            surf.blit(gameGrid[t][1],(x*stepSize,y*stepSize))
         
 
 sheet1 = get_spritesheet("example1.png")
@@ -528,7 +497,6 @@ landList.append(Landform(landforms.base5x3,list1,(19,5)))
 for l in landList:
     gameGrid = l.update_grid(gameGrid)
 
-#print gameGrid
 
 #land1 = Landform(landforms.base5x3,list1,(0,10))
 #land2 = Landform(landforms.stair6x6,list1,(5,10))
@@ -540,8 +508,6 @@ aniList = [player]
 
 gridSpeed = GRIDSPEED
 timeSinceGridShift = 0.
-
-columnSurf = drawColumnSurf(gameGrid,GRIDX+1)
 
 fillColor = (0,0,0)
 
@@ -608,18 +574,12 @@ while True:
             except:
                 print "Prune error. Replace this with the gamelose event." #TODO
 
-            #columnSurf = drawColumnSurf(gameGrid,GRIDX+1)
-            #print "*"
-##            for x in gameGrid.keys():
-##                if x[0] == GRIDX+1:
-##                    print gameGrid[x]
-
             fillColor = (random.randint(0,255),random.randint(0,255),random.randint(0,255))
         
 
     gameSurf.fill(LIGHTBLUE)
 
-    gameSurf = draw_grid(gameSurf,GRIDSIZE)
+    #gameSurf = draw_grid(gameSurf,GRIDSIZE)
 
     #gameSurf = demo_sprites(list1,gameSurf,GRIDSIZE)
     #gameSurf.blit(list3[tileIndex[random.choice(TILEINDEX.keys())]],(0,0))
@@ -638,27 +598,16 @@ while True:
 
     timeSinceGridShift += timePassedSeconds
 
-    #gameSurf.blit(columnSurf,(GRIDX*GRIDSIZE,0))
-
     if (SCREENX,SCREENY) != (GAMEX,GAMEY):
         offset = -GRIDSIZE*(timeSinceGridShift/gridSpeed)*(SCREENX/float(GAMEX))
         newSurf = pygame.transform.scale(gameSurf,(SCREENX,SCREENY))
         DISPLAYSURF.blit(newSurf,(offset,0))
-        #DISPLAYSURF.blit(columnSurf,(0,0))
         DISPLAYSURF.fill(fillColor,(SCREENX-GRIDSIZE*(SCREENX/float(GAMEX)),0,GRIDSIZE*(SCREENX/float(GAMEX)),SCREENY))
                          
     else:
         DISPLAYSURF.blit(gameSurf,(0,0))
         
     pygame.display.update()
-
-##    if abs(PLAYEROFFSETX) >= GRIDSIZE:  #sort of relative movement
-##        if PLAYEROFFSETX > 0:
-##            pygame.event.post(pygame.event.Event(CHANGETILEEVENT,x=-1,y=0))
-##        else:
-##            pygame.event.post(pygame.event.Event(CHANGETILEEVENT,x=1,y=0))
-##        PLAYEROFFSETX = 0
-
 
     if timeSinceGridShift >= gridSpeed:
         pygame.event.post(pygame.event.Event(CHANGETILEEVENT,x=-1,y=0))
@@ -667,9 +616,3 @@ while True:
 
     timePassed = clock.tick(FPS)
     timePassedSeconds = timePassed/1000.
-
-
-##    print timePassedSeconds
-##
-##    for x in xrange(50):
-##        print
