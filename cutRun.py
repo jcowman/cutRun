@@ -426,7 +426,8 @@ class Anisprite(object):
 
                 if colDirection == RIGHT:
                     tileX = int(self.x/step)
-                    self.x = tileBox.left - (step-self.boundBox.right%step)
+                    #self.x = tileBox.left - (step-self.boundBox.right%step)
+                    self.x = tileBox.left - self.boundBox.width - (step-self.boundBox.width)*0.5
                     self.vx = 0
 
                 if colDirection == UP:
@@ -438,6 +439,7 @@ class Anisprite(object):
                     tileX = int(self.x/step) + 1
                     self.vx = 0
                     self.x = tileBox.right - (step-self.boundBox.width)*0.5
+                    #self.x = tileBox.right - (step-self.boundBox.left%step)
 
         self.coords = (self.x,self.y)
 
@@ -450,6 +452,18 @@ class Anisprite(object):
         destSurf.blit(self.spriteList[self.spriteIndex],self.coords)
         
         return destSurf
+
+def pruneGrid(gameGrid,leftLimit,bottomLimit):
+
+    for t in gameGrid.keys():
+        
+        x,y = t
+
+        if x <= leftLimit:
+            del gameGrid[t]
+
+        if y >= bottomLimit:
+            del gameGrid[t]
         
 
 sheet1 = get_spritesheet("example1.png")
@@ -545,6 +559,11 @@ while True:
                 gameGrid = l.update_grid(gameGrid)
 
             player.changePos(event.x*GRIDSIZE,event.y*GRIDSIZE)
+
+            try:
+                pruneGrid(gameGrid,-5,15)
+            except:
+                print "Prune error. Replace this with the gamelose event." #TODO
             
 
     gameSurf.fill(LIGHTBLUE)
