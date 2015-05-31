@@ -475,6 +475,10 @@ class Anisprite(object):
         self.coords = (self.x,self.y)
 
         return self.vx*(msPassed/1000.0)
+
+    def checkFall(self,mercybuffer=20):
+
+        return self.y > GAMEY + mercybuffer
                 
     def draw(self,destSurf):
 
@@ -811,6 +815,10 @@ while True:
             fillColor = (random.randint(0,255),random.randint(0,255),random.randint(0,255))
 
             landXTile -= 1
+
+        elif event.type == PLAYERLOSEEVENT:
+            print "you lose!"
+            exit()
         
 
     gameSurf.fill(BGCOLOR)
@@ -830,6 +838,9 @@ while True:
 
     PLAYEROFFSETX += aniList[0].update(timePassed)
     gameSurf = aniList[0].draw(gameSurf)
+
+    if aniList[0].checkFall():
+        pygame.event.post(pygame.event.Event(PLAYERLOSEEVENT))
 
     if len(aniList) > 1:
 
