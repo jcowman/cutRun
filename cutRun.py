@@ -21,6 +21,8 @@ GRIDSIZE = 16
 GRAVCONSTANT = 20 #tiles/s^2
 GRIDSPEED = 0.5 #sec/shift
 
+SHIFTAMOUNT = 20
+
 BLACK = (0,0,0)
 WHITE = (255,255,255)
 GRAY1 = (125,125,125)
@@ -662,7 +664,6 @@ def genEnemy(spriteLists):
 
 
 #"""
-        
 
 sheet1 = get_spritesheet("example1.png")
 list1 = get_sprites(sheet1,GRIDSIZE)
@@ -676,10 +677,12 @@ list4 = get_sprites(sheet4,GRIDSIZE)
 landList = []
 queuedLandList = []
 
-for x in xrange(1,20):
-    queuedLandList += genGround(20,x,[list1,list2,list4],3,0)
+##for x in xrange(1,20):
+##    queuedLandList += genGround(20,x,[list1,list2,list4],3,0)
 
-landList.append(Landform(["!"*10]*10,list1,(10,4)))
+#landList.append(Landform(["!"*10]*10,list1,(10,4)))
+
+queuedLandList += genGround(20,1,[list1,list2,list4],3,0)
 
 """
 
@@ -710,14 +713,21 @@ player = Anisprite(list1[P1o:P1],(3,3),90,206,False)
 
 aniList = [player]
 
+noiseLevel = 1
+maxEnemies = 0
+
 gridSpeed = GRIDSPEED
 timeSinceGridShift = 0.
 
 fillColor = (0,0,0)
 
-playerXTile = 0
+totalXTile = 0
+tilesSinceShift = 0
+
 landXTile = 0
 maxTilesOnScreen = GRIDX+1
+
+toDelete = []
 
 #direction,jumpyness,spriteSlice,initGridCoords,moveSpeed=0,jumpPower=0,allowFloat=False,aniSpeed=80,step=GRIDSIZE
 
@@ -729,12 +739,33 @@ timePassedSeconds = timePassed/1000.
 
 while True:
 
+    toDelete = []
+
     while landXTile < maxTilesOnScreen:
-        
-        land = queuedLandList.pop(0)
+
+        try:
+            land = queuedLandList.pop(0)
+        except:
+            land = genGround(20,1,[list1,list2,list4],3,0)[0]
+            
         land.change_grid(landXTile)
         landXTile += land.numX
         landList.append(land)
+
+    if len(aniList) - 1 < maxEnemies:
+        aniList.append(genEnemy([list1,list2,list4]))
+
+    if tilesSinceShift >= SHIFTAMOUNT:
+        
+        tilesSinceShift = 0
+        
+        noiseLevel += 1
+        gridSpeed *= .95
+        maxEnemies += 1
+
+        queuedLandList += genGround(20,noiseLevel,[list1,list2,list4],3,0)
+
+        print "level up!",noiseLevel,gridSpeed,maxEnemies
 
     for event in pygame.event.get():
         
@@ -767,8 +798,10 @@ while True:
                 #print len(landList),len(gameGrid)
 
                 #aniList[1].jump()
+                print totalXTile
 
                 aniList.append(genEnemy([list1,list2,list4]))
+                #print len(aniList)
 
         elif event.type == KEYUP:
 
@@ -798,7 +831,9 @@ while True:
             try:
                 pruneGrid(gameGrid,-5,15)
             except:
-                print "Prune error. Replace this with the gamelose event." #TODO
+                pass
+                #continue
+                #print "Prune error. Replace this with the gamelose event." #TODO
 
             delList = []
 
@@ -815,6 +850,8 @@ while True:
             fillColor = (random.randint(0,255),random.randint(0,255),random.randint(0,255))
 
             landXTile -= 1
+            totalXTile += 1
+            tilesSinceShift += 1
 
         elif event.type == PLAYERLOSEEVENT:
             print "you lose!"
@@ -847,6 +884,13 @@ while True:
         for a in aniList[1:]:
             a.update(timePassed)
             gameSurf = a.draw(gameSurf)
+            
+            if a.checkFall():
+                toDelete.append(a)
+
+    for t in toDelete:
+        aniList.pop(aniList.index(t))
+                
 
     timeSinceGridShift += timePassedSeconds
 
