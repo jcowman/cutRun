@@ -23,6 +23,8 @@ GRIDSPEED = 0.5 #sec/shift
 
 SHIFTAMOUNT = 20
 
+INCLUDEFILE = "IncludedSpritesheets.txt"
+
 BLACK = (0,0,0)
 WHITE = (255,255,255)
 GRAY1 = (125,125,125)
@@ -716,10 +718,14 @@ def genEnemy(spriteLists):
 #"""
 
 spriteLists = []
-spriteSheetFilenames = ["example1.png","randomImage.png","alt2.png"]
+#spriteSheetFilenames = ["default.png","alt1.png","alt2.png"]
+
+spriteSheetFilenames = [line.strip() for line in open(INCLUDEFILE)][1:] #don't include header
 
 for f in spriteSheetFilenames:
     spriteLists.append(get_sprites(get_spritesheet(f),GRIDSIZE))
+
+"""
 
 sheet1 = get_spritesheet("example1.png")
 list1 = get_sprites(sheet1,GRIDSIZE)
@@ -729,6 +735,8 @@ sheet3 = get_spritesheet("numbered.png")
 list3 = get_sprites(sheet3,GRIDSIZE)
 sheet4 = get_spritesheet("alt2.png")
 list4 = get_sprites(sheet4,GRIDSIZE)
+
+"""
 
 landList = []
 queuedLandList = []

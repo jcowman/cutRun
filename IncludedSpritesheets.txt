@@ -1,0 +1,4 @@
+Type the name of each spritesheet (including the .png) on a seperate line:
+default.png
+alt1.png
+alt2.png
