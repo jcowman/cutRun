@@ -665,6 +665,12 @@ def genEnemy(spriteLists):
 
 #"""
 
+spriteLists = []
+spriteSheetFilenames = ["example1.png","randomImage.png","alt2.png"]
+
+for f in spriteSheetFilenames:
+    spriteLists.append(get_sprites(get_spritesheet(f),GRIDSIZE))
+
 sheet1 = get_spritesheet("example1.png")
 list1 = get_sprites(sheet1,GRIDSIZE)
 sheet2 = get_spritesheet("randomImage.png")
@@ -682,7 +688,7 @@ queuedLandList = []
 
 #landList.append(Landform(["!"*10]*10,list1,(10,4)))
 
-queuedLandList += genGround(20,1,[list1,list2,list4],3,0)
+queuedLandList += genGround(20,1,spriteLists,3,0)
 
 """
 
@@ -709,7 +715,7 @@ for l in landList:
 #land2 = Landform(landforms.stair6x6,list1,(5,10))
 
 #player = Anisprite(list4[P2o:P2],(0,9),90,200,True)
-player = Anisprite(list1[P1o:P1],(3,3),90,206,False)
+player = Anisprite(spriteLists[0][P1o:P1],(3,3),90,206,False)
 
 aniList = [player]
 
@@ -746,14 +752,14 @@ while True:
         try:
             land = queuedLandList.pop(0)
         except:
-            land = genGround(20,1,[list1,list2,list4],3,0)[0]
+            land = genGround(20,1,spriteLists,3,0)[0]
             
         land.change_grid(landXTile)
         landXTile += land.numX
         landList.append(land)
 
     if len(aniList) - 1 < maxEnemies:
-        aniList.append(genEnemy([list1,list2,list4]))
+        aniList.append(genEnemy(spriteLists))
 
     if tilesSinceShift >= SHIFTAMOUNT:
         
@@ -761,9 +767,11 @@ while True:
         
         noiseLevel += 1
         gridSpeed *= .95
-        maxEnemies += 1
 
-        queuedLandList += genGround(20,noiseLevel,[list1,list2,list4],3,0)
+        if random.randint(0,maxEnemies*2) < len(aniList):
+            maxEnemies += 1
+
+        queuedLandList += genGround(20,noiseLevel,spriteLists,3,0)
 
         print "level up!",noiseLevel,gridSpeed,maxEnemies
 
@@ -800,7 +808,7 @@ while True:
                 #aniList[1].jump()
                 print totalXTile
 
-                aniList.append(genEnemy([list1,list2,list4]))
+                aniList.append(genEnemy(spriteLists))
                 #print len(aniList)
 
         elif event.type == KEYUP:
