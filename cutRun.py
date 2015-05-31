@@ -62,6 +62,7 @@ global PLAYEROFFSETX
 PLAYEROFFSETX = 0
 
 CHANGETILEEVENT = USEREVENT + 1
+PLAYERLOSEEVENT = USEREVENT + 2
 
 TILEINDEX = {"a":32,"b":33,"c":34,"d":35,"e":36,"f":37,"g":38,"h":39,"i":40,"j":41,"k":42,"l":43,"m":44,"n":45,"o":46,"p":47,"q":48,"r":49,"s":50,"t":51,"u":52,"v":53,"w":54,"x":55,"y":56,"z":57,"1":58,"2":59,"3":60,"4":61,"5":62,"6":63}
 TERRAINLISTS = [["b","a","c","d","e","f","g","h"],["j","i","k","l","m","n","o","p"],["q","r","s","t"],["u","v","w","x"],["y","z"],["1","2","3","4","5"],["6"]]
@@ -483,6 +484,38 @@ class Anisprite(object):
         
         return destSurf
 
+class Enemy(Anisprite):
+
+    def __init__(self,direction,jumpyness,spriteSlice,initGridCoords,moveSpeed=0,jumpPower=0,allowFloat=False,aniSpeed=80,step=GRIDSIZE):
+        
+        super(Enemy,self).__init__(spriteSlice,initGridCoords,moveSpeed,jumpPower,allowFloat,aniSpeed,step)
+
+        if direction == LEFT:
+            self.changeState(LEFTRUN)
+
+        elif direction == RIGHT:
+            self.changeState(RIGHTRUN)
+
+        self.jumpyness = jumpyness
+        self.timeSinceJumpCheck = 0
+
+    def update(self,msPassed,step=GRIDSIZE,screenDim=(GAMEX,GAMEY),gridDim=(GRIDX,GRIDY),globalGrid=gameGrid):
+
+        msPassed2 = min(msPassed,1000./FPS)
+        self.timeSinceJumpCheck += msPassed2/1000.
+
+        if self.timeSinceJumpCheck >= 1:
+            self.timeSinceJumpCheck = 0
+
+            if random.randint(0,100) < self.jumpyness:
+                self.jump()
+
+##        if 100 - random.randint(0,100) < self.jumpyness:
+##            self.jump()
+        
+
+        return super(Enemy,self).update(msPassed,step,screenDim,gridDim,globalGrid)
+
 def pruneGrid(gameGrid,leftLimit,bottomLimit):
 
     for t in gameGrid.keys():
@@ -584,6 +617,45 @@ def genGround(segmentLength,noiseFactor,spriteLists,startY,startX):
 
     return terrainList
 
+def genEnemy(spriteLists):
+
+    listChoice = random.choice(spriteLists)
+    indexChoice = random.randint(1,3)
+
+    if indexChoice == 1:
+        index1 = P1o
+        index2 = P1
+        
+    elif indexChoice == 2:
+        index1 = P2o
+        index2 = P2
+
+    elif indexChoice == 3:
+        index1 = P3o
+        index2 = P3
+
+    direction = random.choice([LEFT,RIGHT])
+
+    jumpyness = int(100-random.randint(0,100)*random.random()*0.5)
+
+    if direction == RIGHT:
+        x = random.randint(-1,4)
+
+    elif direction == LEFT:
+        x = random.randint(GRIDX-3,GRIDX+1)
+    
+    y = random.randint(-5,-1)
+
+    speed = int((random.randint(30,130) + random.randint(0,130) + random.randint(0,130))/3.)
+
+    jump = int((random.randint(50,250) + random.randint(50,250))/2.)
+
+    #direction,jumpyness,spriteSlice,initGridCoords,moveSpeed=0,jumpPower=0,allowFloat=False,aniSpeed=80,step=GRIDSIZE
+
+    enemy = Enemy(direction,jumpyness,listChoice[index1:index2],(x,y),speed,jump)
+
+    return enemy
+
 
 #"""
         
@@ -601,7 +673,7 @@ landList = []
 queuedLandList = []
 
 for x in xrange(1,20):
-    queuedLandList += genGround(20,x,[list1,list2,list3,list4],3,0)
+    queuedLandList += genGround(20,x,[list1,list2,list4],3,0)
 
 landList.append(Landform(["!"*10]*10,list1,(10,4)))
 
@@ -642,6 +714,10 @@ fillColor = (0,0,0)
 playerXTile = 0
 landXTile = 0
 maxTilesOnScreen = GRIDX+1
+
+#direction,jumpyness,spriteSlice,initGridCoords,moveSpeed=0,jumpPower=0,allowFloat=False,aniSpeed=80,step=GRIDSIZE
+
+#aniList.append(Enemy(RIGHT,50,list1[P2o:P2],(5,-1),50,150))
 
 clock = pygame.time.Clock()
 timePassed = clock.tick()
@@ -684,7 +760,11 @@ while True:
 ##
 ##                player.changePos(-GRIDSIZE)
 
-                print len(landList),len(gameGrid)
+                #print len(landList),len(gameGrid)
+
+                #aniList[1].jump()
+
+                aniList.append(genEnemy([list1,list2,list4]))
 
         elif event.type == KEYUP:
 
@@ -708,7 +788,8 @@ while True:
                 l.change_grid(event.x,event.y)
                 gameGrid = l.update_grid(gameGrid)
 
-            player.changePos(event.x*GRIDSIZE,event.y*GRIDSIZE)
+            for a in aniList:
+                a.changePos(event.x*GRIDSIZE,event.y*GRIDSIZE)
 
             try:
                 pruneGrid(gameGrid,-5,15)
@@ -747,9 +828,14 @@ while True:
         gameSurf = x.blit_surf(gameSurf)
     #gameSurf = land2.blit_surf(gameSurf)
 
-    for a in aniList:
-        PLAYEROFFSETX += a.update(timePassed)
-        gameSurf = a.draw(gameSurf)
+    PLAYEROFFSETX += aniList[0].update(timePassed)
+    gameSurf = aniList[0].draw(gameSurf)
+
+    if len(aniList) > 1:
+
+        for a in aniList[1:]:
+            a.update(timePassed)
+            gameSurf = a.draw(gameSurf)
 
     timeSinceGridShift += timePassedSeconds
 
