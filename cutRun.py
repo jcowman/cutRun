@@ -720,6 +720,78 @@ levelUpFont = pygame.font.Font(FONT,32)
 
 while True:
 
+    onTitle = True
+    
+    playerList = 0
+    playerIndex1 = P1o
+    playerIndex2 = P1
+
+    pCoords = (700,300)
+    pScale = (200,200)
+
+    pSurf = spriteLists[playerList][playerIndex1]
+    tranSurf = pygame.transform.scale(pSurf,pScale)
+
+    while onTitle:
+
+        for event in pygame.event.get():
+
+            if event.type == QUIT:
+                exit()
+
+            if event.type == KEYDOWN:
+
+                if event.key == K_ESCAPE:
+                    exit()
+
+                if event.key == K_SPACE:
+                    onTitle = False
+
+                if event.key == K_RIGHT:
+
+                    if playerIndex1 == P1o:
+                        playerIndex1 = P2o
+                        playerIndex2 = P2
+
+                    elif playerIndex1 == P2o:
+                        playerIndex1 = P3o
+                        playerIndex2 = P3
+
+                    elif playerIndex1 == P3o:
+                        playerIndex1 = P1o
+                        playerIndex2 = P1
+                        playerList += 1
+
+                    if playerList >= len(spriteLists):
+                        playerList = 0
+
+                if event.key == K_LEFT:
+
+                    if playerIndex1 == P1o:
+                        playerIndex1 = P3o
+                        playerIndex2 = P3
+                        playerList -= 1
+
+                    elif playerIndex1 == P2o:
+                        playerIndex1 = P1o
+                        playerIndex2 = P1
+
+                    elif playerIndex1 == P3o:
+                        playerIndex1 = P2o
+                        playerIndex2 = P2
+
+                    if playerList < 0:
+                        playerList = len(spriteLists) - 1
+
+                pSurf = spriteLists[playerList][playerIndex1]
+                tranSurf = pygame.transform.scale(pSurf,pScale)
+
+        DISPLAYSURF.fill(BLACK)
+
+        DISPLAYSURF.blit(tranSurf,pCoords)
+
+        pygame.display.update()
+
     #print "Starting Game..."
     doGame = True
 
@@ -728,11 +800,10 @@ while True:
 
     queuedLandList += genGround(20,1,spriteLists,3,0)
 
-
     for l in landList:
         gameGrid = l.update_grid(gameGrid)
 
-    player = Anisprite(spriteLists[0][P1o:P1],(3,3),90,206,False)
+    player = Anisprite(spriteLists[playerList][playerIndex1:playerIndex2],(3,3),90,206,False)
 
     aniList = [player]
 
@@ -815,6 +886,9 @@ while True:
 
                 if event.key == K_RETURN: #debug key 1
                     pass
+
+                if event.key == K_ESCAPE:
+                    exit()
 
             elif event.type == KEYUP:
 
