@@ -41,9 +41,9 @@ RIGHTRUN = "RightRun"
 RIGHTFACE = "RightFace"
 
 UP = "Up"
-RIGHT = "Right"
+RIGHT = 1
 DOWN = "Down"
-LEFT = "Left"
+LEFT = -1
 
 pygame.init()
 
@@ -291,9 +291,9 @@ class Anisprite(object):
         self.coords = (self.x,self.y)
         #self.boundBox
 
-    def jump(self,boost=0):
+    def jump(self,override=False,boost=0):
         
-        if self.onSolidGround:
+        if self.onSolidGround or override:
             self.vy = -(self.jumpPower+boost)
             self.onSolidGround = False
             #print self.vy
@@ -372,6 +372,28 @@ class Anisprite(object):
         if self.state == IDLE:
             self.vx = 0
 
+        if self.state == LEFTFACE:
+            if self.vx < 0:
+                self.vx += self.moveSpeed*(msPassed/1000.0)
+                self.vx = min(0,self.vx)
+            elif self.vx > 0:
+                self.vx -= self.moveSpeed*(msPassed/1000.0)
+                self.vx = max(0,self.vx)
+
+            if not self.vx:
+                self.changeState(IDLE)
+
+        if self.state == RIGHTFACE:
+            if self.vx < 0:
+                self.vx += self.moveSpeed*(msPassed/1000.0)
+                self.vx = min(0,self.vx)
+            elif self.vx > 0:
+                self.vx -= self.moveSpeed*(msPassed/1000.0)
+                self.vx = max(0,self.vx)
+
+            if not self.vx:
+                self.changeState(IDLE)
+
         if self.state == LEFTRUN:
 
             if self.timeSinceAni >= self.aniSpeed:
@@ -442,6 +464,9 @@ class Anisprite(object):
 
             if colDirection:
 
+                if self.state == LEFTFACE or self.state == RIGHTFACE:
+                    self.changeState(IDLE)
+
 
                 tileBox = globalGrid[t][0]
 
@@ -481,7 +506,31 @@ class Anisprite(object):
     def checkFall(self,mercybuffer=20):
 
         return self.y > GAMEY + mercybuffer
-                
+
+    def checkSpriteCollide(self,targetSprite):
+
+        targetBound = targetSprite.boundBox
+
+        return self.boundBox.colliderect(targetBound)
+
+    def getHit(self,DIRECTION,changeState=True):
+
+        #direction should be direction of collision
+        
+        self.vx = random.randint(1,4)*random.randint(1,self.moveSpeed)
+        self.jump(True)
+        #self.vy += random.randint(0,100)
+
+        if DIRECTION == RIGHT:
+            self.vx = -self.vx
+            
+            if changeState:
+                self.changeState(LEFTFACE)
+
+        elif DIRECTION == LEFT:
+            if changeState:
+                self.changeState(RIGHTFACE)
+
     def draw(self,destSurf):
 
         #destSurf.fill(RED,self.boundBox)
@@ -504,6 +553,7 @@ class Enemy(Anisprite):
 
         self.jumpyness = jumpyness
         self.timeSinceJumpCheck = 0
+        self.direction = direction #enemy only attribute
 
     def update(self,msPassed,step=GRIDSIZE,screenDim=(GAMEX,GAMEY),gridDim=(GRIDX,GRIDY),globalGrid=gameGrid):
 
@@ -881,10 +931,12 @@ while True:
         gameSurf = x.blit_surf(gameSurf)
     #gameSurf = land2.blit_surf(gameSurf)
 
-    PLAYEROFFSETX += aniList[0].update(timePassed)
-    gameSurf = aniList[0].draw(gameSurf)
+    currentPlayer = aniList[0]
 
-    if aniList[0].checkFall():
+    PLAYEROFFSETX += currentPlayer.update(timePassed)
+    gameSurf = currentPlayer.draw(gameSurf)
+
+    if currentPlayer.checkFall():
         pygame.event.post(pygame.event.Event(PLAYERLOSEEVENT))
 
     if len(aniList) > 1:
@@ -895,6 +947,10 @@ while True:
             
             if a.checkFall():
                 toDelete.append(a)
+
+            if a.checkSpriteCollide(currentPlayer):
+                currentPlayer.getHit(a.direction)
+                #a.getHit(-a.direction,False)
 
     for t in toDelete:
         aniList.pop(aniList.index(t))
