@@ -9,8 +9,6 @@ from sys import exit
 import random
 import math
 
-import landforms #made by me
-
 FPS = 60
 
 SCREENX, SCREENY = (1080,720)
@@ -291,14 +289,12 @@ class Anisprite(object):
         self.y += deltaY
 
         self.coords = (self.x,self.y)
-        #self.boundBox
 
     def jump(self,override=False,boost=0):
         
         if self.onSolidGround or override:
             self.vy = -(self.jumpPower+boost)
             self.onSolidGround = False
-            #print self.vy
 
     def changeState(self,newState=None):
 
@@ -521,7 +517,6 @@ class Anisprite(object):
         
         self.vx = random.randint(1,4)*random.randint(1,self.moveSpeed)
         self.jump(True)
-        #self.vy += random.randint(0,100)
 
         if DIRECTION == RIGHT:
             self.vx = -self.vx
@@ -535,8 +530,6 @@ class Anisprite(object):
 
     def draw(self,destSurf):
 
-        #destSurf.fill(RED,self.boundBox)
-        
         destSurf.blit(self.spriteList[self.spriteIndex],self.coords)
         
         return destSurf
@@ -568,10 +561,6 @@ class Enemy(Anisprite):
             if random.randint(0,100) < self.jumpyness:
                 self.jump()
 
-##        if 100 - random.randint(0,100) < self.jumpyness:
-##            self.jump()
-        
-
         return super(Enemy,self).update(msPassed,step,screenDim,gridDim,globalGrid)
 
 def pruneGrid(gameGrid,leftLimit,bottomLimit):
@@ -596,9 +585,7 @@ def genGround(segmentLength,noiseFactor,spriteLists,startY,startX):
     lastY = startY #default
 
     while currentLength < segmentLength:
-
-        #X Calculation
-
+        
         x = 5 #default
         deltaX = 0
 
@@ -708,71 +695,27 @@ def genEnemy(spriteLists):
 
     jump = int((random.randint(50,250) + random.randint(50,250))/2.)
 
-    #direction,jumpyness,spriteSlice,initGridCoords,moveSpeed=0,jumpPower=0,allowFloat=False,aniSpeed=80,step=GRIDSIZE
-
     enemy = Enemy(direction,jumpyness,listChoice[index1:index2],(x,y),speed,jump)
 
     return enemy
 
-
-#"""
-
 spriteLists = []
-#spriteSheetFilenames = ["default.png","alt1.png","alt2.png"]
 
 spriteSheetFilenames = [line.strip() for line in open(INCLUDEFILE)][1:] #don't include header
 
 for f in spriteSheetFilenames:
     spriteLists.append(get_sprites(get_spritesheet(f),GRIDSIZE))
 
-"""
-
-sheet1 = get_spritesheet("example1.png")
-list1 = get_sprites(sheet1,GRIDSIZE)
-sheet2 = get_spritesheet("randomImage.png")
-list2 = get_sprites(sheet2,GRIDSIZE)
-sheet3 = get_spritesheet("numbered.png")
-list3 = get_sprites(sheet3,GRIDSIZE)
-sheet4 = get_spritesheet("alt2.png")
-list4 = get_sprites(sheet4,GRIDSIZE)
-
-"""
 
 landList = []
 queuedLandList = []
 
-##for x in xrange(1,20):
-##    queuedLandList += genGround(20,x,[list1,list2,list4],3,0)
-
-#landList.append(Landform(["!"*10]*10,list1,(10,4)))
-
 queuedLandList += genGround(20,1,spriteLists,3,0)
 
-"""
-
-for x in [0,5,10,15]:
-    landList.append(Landform(landforms.base5x3,list1,(x,10)))
-
-landList.append(Landform(landforms.stair6x6,list1,(14,4)))
-
-landList.append(Landform(landforms.floatform,list1,(3,4)))
-
-landList.append(Landform(landforms.plat3x1,list1,(9,7)))
-
-landList.append(Landform(landforms.base5x3,list1,(19,5)))
-
-#landList.append(Landform(["m"*100],list4,(20,4)))
-
-"""
 
 for l in landList:
     gameGrid = l.update_grid(gameGrid)
 
-
-#land1 = Landform(landforms.base5x3,list1,(0,10))
-#land2 = Landform(landforms.stair6x6,list1,(5,10))
-
-#player = Anisprite(list4[P2o:P2],(0,9),90,200,True)
 player = Anisprite(spriteLists[0][P1o:P1],(3,3),90,206,False)
 
 aniList = [player]
@@ -792,10 +735,6 @@ landXTile = 0
 maxTilesOnScreen = GRIDX+1
 
 toDelete = []
-
-#direction,jumpyness,spriteSlice,initGridCoords,moveSpeed=0,jumpPower=0,allowFloat=False,aniSpeed=80,step=GRIDSIZE
-
-#aniList.append(Enemy(RIGHT,50,list1[P2o:P2],(5,-1),50,150))
 
 clock = pygame.time.Clock()
 timePassed = clock.tick()
@@ -850,24 +789,7 @@ while True:
                 player.jump()
 
             if event.key == K_RETURN: #debug key 1
-
-##                for x in xrange(GRIDX+1):
-##                    for y in xrange(GRIDY+1):
-##                        gameGrid[(x,y)] = 0
-##                        
-##                for l in landList:
-##                    l.change_grid(-1)
-##                    gameGrid = l.update_grid(gameGrid)
-##
-##                player.changePos(-GRIDSIZE)
-
-                #print len(landList),len(gameGrid)
-
-                #aniList[1].jump()
-                print totalXTile
-
-                aniList.append(genEnemy(spriteLists))
-                #print len(aniList)
+                pass
 
         elif event.type == KEYUP:
 
@@ -880,8 +802,6 @@ while True:
                     player.changeState(IDLE)
 
         elif event.type == CHANGETILEEVENT:
-
-            #gameGrid = {}
             
             for x in xrange(GRIDX+2):
                 for y in xrange(GRIDY+1):
@@ -896,10 +816,10 @@ while True:
 
             try:
                 pruneGrid(gameGrid,-5,15)
+                
             except:
                 pass
-                #continue
-                #print "Prune error. Replace this with the gamelose event." #TODO
+
 
             delList = []
 
@@ -926,19 +846,9 @@ while True:
 
     gameSurf.fill(BGCOLOR)
 
-    #gameSurf = draw_grid(gameSurf,GRIDSIZE)
-
-    #gameSurf = demo_sprites(list1,gameSurf,GRIDSIZE)
-    #gameSurf.blit(list3[tileIndex[random.choice(TILEINDEX.keys())]],(0,0))
-    #gameSurf.blit(list1[1],(0,0))
-    #gameSurf.blit(sheet1,(0,0),(16, 80, 16, 16))
-
-    #gameSurf = land1.blit_surf(gameSurf)
-
     for x in landList:
         gameSurf = x.blit_surf(gameSurf)
-    #gameSurf = land2.blit_surf(gameSurf)
-
+        
     currentPlayer = aniList[0]
 
     PLAYEROFFSETX += currentPlayer.update(timePassed)
@@ -958,7 +868,7 @@ while True:
 
             if a.checkSpriteCollide(currentPlayer):
                 currentPlayer.getHit(a.direction)
-                #a.getHit(-a.direction,False)
+
 
     for t in toDelete:
         aniList.pop(aniList.index(t))
@@ -984,4 +894,4 @@ while True:
 
     timePassed = clock.tick(FPS)
     timePassedSeconds = timePassed/1000.
-#"""
+
