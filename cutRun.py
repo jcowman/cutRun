@@ -1,7 +1,7 @@
-#Temporary name: Cut and Run
+#Cut+Run
 #Project for Mini LD 59: Swap
 #May 2015
-#by Joe Cowman (In progress)
+#by Joe Cowman
 
 import pygame
 from pygame.locals import *
@@ -55,7 +55,7 @@ pygame.init()
 
 DISPLAYSURF = pygame.display.set_mode((SCREENX,SCREENY))
 
-pygame.display.set_caption("CODENAME: Cut and Run")
+pygame.display.set_caption("Cut+Run")
 
 global gameSurf
 gameSurf = pygame.Surface((GAMEX,GAMEY))
@@ -726,11 +726,34 @@ while True:
     playerIndex1 = P1o
     playerIndex2 = P1
 
-    pCoords = (700,300)
+    pCoords = (720,100)
     pScale = (200,200)
 
     pSurf = spriteLists[playerList][playerIndex1]
     tranSurf = pygame.transform.scale(pSurf,pScale)
+
+    cutRunFont = pygame.font.Font(FONT,100)
+    cutRunSurf = cutRunFont.render("Cut+Run",True,WHITE)
+    cutRunCoords = (100,100)
+
+    subFont = pygame.font.Font(FONT,32)
+                                    
+    sub1Surf = subFont.render("code by Joe Cowman",True,WHITE)
+    sub1Coords = (108,218)
+
+    sub2Surf = subFont.render("graphics by 77 others",True,WHITE)
+    sub2Coords = (108,250)
+
+    insFont = pygame.font.Font(FONT,40)
+
+    ins1Surf = insFont.render("LEFT/RIGHT: Select Character",True,WHITE)
+    ins1Coords = (0.5*(SCREENX-ins1Surf.get_width()),400)
+
+    ins2Surf = insFont.render("SPACE: Start Game",True,WHITE)
+    ins2Coords = (0.5*(SCREENX-ins2Surf.get_width()),470)
+
+    ins3Surf = insFont.render("ESCAPE: Quit",True,WHITE)
+    ins3Coords = (0.5*(SCREENX-ins3Surf.get_width()),540)
 
     while onTitle:
 
@@ -789,6 +812,12 @@ while True:
         DISPLAYSURF.fill(BLACK)
 
         DISPLAYSURF.blit(tranSurf,pCoords)
+        DISPLAYSURF.blit(cutRunSurf,cutRunCoords)
+        DISPLAYSURF.blit(sub1Surf,sub1Coords)
+        DISPLAYSURF.blit(sub2Surf,sub2Coords)
+        DISPLAYSURF.blit(ins1Surf,ins1Coords)
+        DISPLAYSURF.blit(ins2Surf,ins2Coords)
+        DISPLAYSURF.blit(ins3Surf,ins3Coords)
 
         pygame.display.update()
 
