@@ -30,6 +30,8 @@ BLUE = (0,0,255)
 LIGHTBLUE = (100,255,255)
 COLORKEY = (1,1,1)
 
+BGCOLOR = LIGHTBLUE
+
 IDLE = "Idle"
 LEFTRUN = "LeftRun"
 LEFTFACE = "LeftFace"
@@ -68,6 +70,9 @@ TERRAINLISTS = [["b","a","c","d","e","f","g","h"],["j","i","k","l","m","n","o","
 P1o,P1 = (0,9)
 P2o,P2 = (9,18)
 P3o,P3 = (18,27)
+
+BGSQUARE = pygame.Surface((GRIDSIZE,GRIDSIZE))
+BGSQUARE.fill(BGCOLOR)
 
 def get_spritesheet(filename):
     sheet = pygame.image.load(filename).convert_alpha()
@@ -145,9 +150,11 @@ class Landform(object):
         self.rectDict = {}
 
         for t in self.typeList:
-            if t != "0":
+            if t not in ["0","!"]:
                 self.typeDict[t] = self.spriteList[TILEINDEX[t]]
                 self.rectDict[t] = self.typeDict[t].get_bounding_rect()
+
+        self.typeDict["!"] = BGSQUARE
 
         self.surf = self.render_surf()
 
@@ -159,6 +166,13 @@ class Landform(object):
         self.gridY += y
         self.gridCoords = (self.gridX,self.gridY)
 
+    def set_grid(self,x=None,y=None):
+        if x is not None:
+            self.gridX = x
+        if y is not None:
+            self.gridY = y
+        self.gridCoords = (self.gridX,self.gridY)
+
     def update_grid(self,globalGrid,step=GRIDSIZE):
 
         for row in xrange(len(self.terrain)):
@@ -168,14 +182,20 @@ class Landform(object):
                 terrainIndex = self.terrain[row][column]
                 
                 if terrainIndex != "0":
-                    
-                    boundRect = Rect(self.rectDict[self.terrain[row][column]])
-                    boundRect.x += step*(self.gridX+column)
-                    boundRect.y += step*(self.gridY+row)
 
-                    tileSurf = self.typeDict[terrainIndex]
+                    if terrainIndex == "!":
+                        
+                        globalGrid[(self.gridX+column,self.gridY+row)] = 0
+
+                    else:
                     
-                    globalGrid[(self.gridX+column,self.gridY+row)]=(boundRect,tileSurf)
+                        boundRect = Rect(self.rectDict[self.terrain[row][column]])
+                        boundRect.x += step*(self.gridX+column)
+                        boundRect.y += step*(self.gridY+row)
+
+                        tileSurf = self.typeDict[terrainIndex]
+                        
+                        globalGrid[(self.gridX+column,self.gridY+row)]=(boundRect,tileSurf)
 
         return globalGrid
 
@@ -193,7 +213,8 @@ class Landform(object):
             
             for c in r:
                 if c != "0":
-                    surf.blit(self.typeDict[c],(x,y))
+                        surf.blit(self.typeDict[c],(x,y))
+                        
                 x+= step
 
             x = 0
@@ -558,6 +579,7 @@ def genGround(segmentLength,noiseFactor,spriteLists,startY,startX):
     for t in xrange(len(stringList)):
 
         terrainList.append(Landform(stringList[t],random.choice(possibleLists),(xStep,yFloor-dimList[t][1])))
+        terrainList[-1].set_grid(0)
         xStep += dimList[t][0]
 
     return terrainList
@@ -576,9 +598,12 @@ sheet4 = get_spritesheet("alt2.png")
 list4 = get_sprites(sheet4,GRIDSIZE)
 
 landList = []
+queuedLandList = []
 
-#for x in xrange(10):
-landList += genGround(1000,10,[list1,list2,list3,list4],3,0)
+for x in xrange(1,20):
+    queuedLandList += genGround(20,x,[list1,list2,list3,list4],3,0)
+
+landList.append(Landform(["!"*10]*10,list1,(10,4)))
 
 """
 
@@ -605,7 +630,7 @@ for l in landList:
 #land2 = Landform(landforms.stair6x6,list1,(5,10))
 
 #player = Anisprite(list4[P2o:P2],(0,9),90,200,True)
-player = Anisprite(list1[P1o:P1],(0,9),90,206,False)
+player = Anisprite(list1[P1o:P1],(3,3),90,206,False)
 
 aniList = [player]
 
@@ -614,11 +639,22 @@ timeSinceGridShift = 0.
 
 fillColor = (0,0,0)
 
+playerXTile = 0
+landXTile = 0
+maxTilesOnScreen = GRIDX+1
+
 clock = pygame.time.Clock()
 timePassed = clock.tick()
 timePassedSeconds = timePassed/1000.
 
 while True:
+
+    while landXTile < maxTilesOnScreen:
+        
+        land = queuedLandList.pop(0)
+        land.change_grid(landXTile)
+        landXTile += land.numX
+        landList.append(land)
 
     for event in pygame.event.get():
         
@@ -648,7 +684,7 @@ while True:
 ##
 ##                player.changePos(-GRIDSIZE)
 
-                print player.gridRect
+                print len(landList),len(gameGrid)
 
         elif event.type == KEYUP:
 
@@ -661,6 +697,8 @@ while True:
                     player.changeState(IDLE)
 
         elif event.type == CHANGETILEEVENT:
+
+            #gameGrid = {}
             
             for x in xrange(GRIDX+2):
                 for y in xrange(GRIDY+1):
@@ -677,10 +715,24 @@ while True:
             except:
                 print "Prune error. Replace this with the gamelose event." #TODO
 
+            delList = []
+
+            for n in xrange(len(landList)):
+                land = landList[n]
+                if land.gridX < -land.numX - 5:
+                    delList.append(n)
+
+            for d in delList:
+                del landList[d]
+                for i in xrange(len(delList)):
+                    delList[i] -= 1 #indexes will change
+
             fillColor = (random.randint(0,255),random.randint(0,255),random.randint(0,255))
+
+            landXTile -= 1
         
 
-    gameSurf.fill(LIGHTBLUE)
+    gameSurf.fill(BGCOLOR)
 
     #gameSurf = draw_grid(gameSurf,GRIDSIZE)
 
