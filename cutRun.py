@@ -22,6 +22,7 @@ GRIDSPEED = 0.5 #sec/shift
 SHIFTAMOUNT = 20
 
 INCLUDEFILE = "IncludedSpritesheets.txt"
+FONT = "8bitoperator.ttf"
 
 BLACK = (0,0,0)
 WHITE = (255,255,255)
@@ -44,6 +45,11 @@ UP = "Up"
 RIGHT = 1
 DOWN = "Down"
 LEFT = -1
+
+GAME = 0
+TITLE = 1
+
+STARTSCREEN = 0
 
 pygame.init()
 
@@ -706,192 +712,252 @@ spriteSheetFilenames = [line.strip() for line in open(INCLUDEFILE)][1:] #don't i
 for f in spriteSheetFilenames:
     spriteLists.append(get_sprites(get_spritesheet(f),GRIDSIZE))
 
+doGame = True
 
-landList = []
-queuedLandList = []
+currentScreen = STARTSCREEN
 
-queuedLandList += genGround(20,1,spriteLists,3,0)
-
-
-for l in landList:
-    gameGrid = l.update_grid(gameGrid)
-
-player = Anisprite(spriteLists[0][P1o:P1],(3,3),90,206,False)
-
-aniList = [player]
-
-noiseLevel = 1
-maxEnemies = 0
-
-gridSpeed = GRIDSPEED
-timeSinceGridShift = 0.
-
-fillColor = (0,0,0)
-
-totalXTile = 0
-tilesSinceShift = 0
-
-landXTile = 0
-maxTilesOnScreen = GRIDX+1
-
-toDelete = []
-
-clock = pygame.time.Clock()
-timePassed = clock.tick()
-timePassedSeconds = timePassed/1000.
+levelUpFont = pygame.font.Font(FONT,32)
 
 while True:
 
+    #print "Starting Game..."
+    doGame = True
+
+    landList = []
+    queuedLandList = []
+
+    queuedLandList += genGround(20,1,spriteLists,3,0)
+
+
+    for l in landList:
+        gameGrid = l.update_grid(gameGrid)
+
+    player = Anisprite(spriteLists[0][P1o:P1],(3,3),90,206,False)
+
+    aniList = [player]
+
+    noiseLevel = 1
+    maxEnemies = 0
+
+    gridSpeed = GRIDSPEED
+    timeSinceGridShift = 0.
+
+    fillColor = (0,0,0)
+
+    totalXTile = 0
+    tilesSinceShift = 0
+
+    landXTile = 0
+    maxTilesOnScreen = GRIDX+1
+
     toDelete = []
 
-    while landXTile < maxTilesOnScreen:
+    levelUpSurf = levelUpFont.render("Wave 1",True,BLACK)
+    levelUpCoords = (0.5*(SCREENX-levelUpSurf.get_width()),20)
+    timeSinceLevelUp = 0.
 
-        try:
-            land = queuedLandList.pop(0)
-        except:
-            land = genGround(20,1,spriteLists,3,0)[0]
-            
-        land.change_grid(landXTile)
-        landXTile += land.numX
-        landList.append(land)
+    clock = pygame.time.Clock()
+    timePassed = clock.tick()
+    timePassedSeconds = timePassed/1000.
 
-    if len(aniList) - 1 < maxEnemies:
-        aniList.append(genEnemy(spriteLists))
+    while doGame:
 
-    if tilesSinceShift >= SHIFTAMOUNT:
-        
-        tilesSinceShift = 0
-        
-        noiseLevel += 1
-        gridSpeed *= .95
+        toDelete = []
 
-        if random.randint(0,maxEnemies*2) < len(aniList):
-            maxEnemies += 1
-
-        queuedLandList += genGround(20,noiseLevel,spriteLists,3,0)
-
-        print "level up!",noiseLevel,gridSpeed,maxEnemies
-
-    for event in pygame.event.get():
-        
-        if event.type == QUIT:
-            exit()
-
-        elif event.type == KEYDOWN:
-
-            if event.key == K_LEFT:
-                player.changeState(LEFTRUN)
-
-            if event.key == K_RIGHT:
-                player.changeState(RIGHTRUN)
-
-            if event.key == K_SPACE:
-                player.jump()
-
-            if event.key == K_RETURN: #debug key 1
-                pass
-
-        elif event.type == KEYUP:
-
-            if event.key == K_LEFT:
-                if player.state == LEFTRUN:
-                    player.changeState(IDLE)
-
-            if event.key == K_RIGHT:
-                if player.state == RIGHTRUN:
-                    player.changeState(IDLE)
-
-        elif event.type == CHANGETILEEVENT:
-            
-            for x in xrange(GRIDX+2):
-                for y in xrange(GRIDY+1):
-                    gameGrid[(x,y)] = 0
-
-            for l in landList:
-                l.change_grid(event.x,event.y)
-                gameGrid = l.update_grid(gameGrid)
-
-            for a in aniList:
-                a.changePos(event.x*GRIDSIZE,event.y*GRIDSIZE)
+        while landXTile < maxTilesOnScreen:
 
             try:
-                pruneGrid(gameGrid,-5,15)
-                
+                land = queuedLandList.pop(0)
             except:
-                pass
-
-
-            delList = []
-
-            for n in xrange(len(landList)):
-                land = landList[n]
-                if land.gridX < -land.numX - 5:
-                    delList.append(n)
-
-            for d in delList:
-                del landList[d]
-                for i in xrange(len(delList)):
-                    delList[i] -= 1 #indexes will change
-
-            fillColor = (random.randint(0,255),random.randint(0,255),random.randint(0,255))
-
-            landXTile -= 1
-            totalXTile += 1
-            tilesSinceShift += 1
-
-        elif event.type == PLAYERLOSEEVENT:
-            print "you lose!"
-            exit()
-        
-
-    gameSurf.fill(BGCOLOR)
-
-    for x in landList:
-        gameSurf = x.blit_surf(gameSurf)
-        
-    currentPlayer = aniList[0]
-
-    PLAYEROFFSETX += currentPlayer.update(timePassed)
-    gameSurf = currentPlayer.draw(gameSurf)
-
-    if currentPlayer.checkFall():
-        pygame.event.post(pygame.event.Event(PLAYERLOSEEVENT))
-
-    if len(aniList) > 1:
-
-        for a in aniList[1:]:
-            a.update(timePassed)
-            gameSurf = a.draw(gameSurf)
-            
-            if a.checkFall():
-                toDelete.append(a)
-
-            if a.checkSpriteCollide(currentPlayer):
-                currentPlayer.getHit(a.direction)
-
-
-    for t in toDelete:
-        aniList.pop(aniList.index(t))
+                land = genGround(20,1,spriteLists,3,0)[0]
                 
+            land.change_grid(landXTile)
+            landXTile += land.numX
+            landList.append(land)
 
-    timeSinceGridShift += timePassedSeconds
+        if len(aniList) - 1 < maxEnemies:
+            aniList.append(genEnemy(spriteLists))
 
-    if (SCREENX,SCREENY) != (GAMEX,GAMEY):
-        offset = -GRIDSIZE*(timeSinceGridShift/gridSpeed)*(SCREENX/float(GAMEX))
-        newSurf = pygame.transform.scale(gameSurf,(SCREENX,SCREENY))
-        DISPLAYSURF.blit(newSurf,(offset,0))
-        DISPLAYSURF.fill(fillColor,(SCREENX-GRIDSIZE*(SCREENX/float(GAMEX)),0,GRIDSIZE*(SCREENX/float(GAMEX)),SCREENY))
-                         
-    else:
-        DISPLAYSURF.blit(gameSurf,(0,0))
-        
-    pygame.display.update()
+        if tilesSinceShift >= SHIFTAMOUNT:
+            
+            tilesSinceShift = 0
+            
+            noiseLevel += 1
+            gridSpeed *= .95
 
-    if timeSinceGridShift >= gridSpeed:
-        pygame.event.post(pygame.event.Event(CHANGETILEEVENT,x=-1,y=0))
-        timeSinceGridShift = 0
+            if random.randint(0,maxEnemies*2) < len(aniList):
+                maxEnemies += 1
+
+            levelUpString = "Wave %i: Speed + 5%%, %i Enemies" % (noiseLevel, maxEnemies)
+
+            queuedLandList += genGround(20,noiseLevel,spriteLists,3,0)
+
+            levelUpSurf = levelUpFont.render(levelUpString,True,BLACK)
+            levelUpCoords = (0.5*(SCREENX-levelUpSurf.get_width()),20)
+
+            #print "level up!",noiseLevel,gridSpeed,maxEnemies
+
+        for event in pygame.event.get():
+            
+            if event.type == QUIT:
+                exit()
+
+            elif event.type == KEYDOWN:
+
+                if event.key == K_LEFT:
+                    player.changeState(LEFTRUN)
+
+                if event.key == K_RIGHT:
+                    player.changeState(RIGHTRUN)
+
+                if event.key == K_SPACE:
+                    player.jump()
+
+                if event.key == K_RETURN: #debug key 1
+                    pass
+
+            elif event.type == KEYUP:
+
+                if event.key == K_LEFT:
+                    if player.state == LEFTRUN:
+                        player.changeState(IDLE)
+
+                if event.key == K_RIGHT:
+                    if player.state == RIGHTRUN:
+                        player.changeState(IDLE)
+
+            elif event.type == CHANGETILEEVENT:
+                
+                for x in xrange(GRIDX+2):
+                    for y in xrange(GRIDY+1):
+                        gameGrid[(x,y)] = 0
+
+                for l in landList:
+                    l.change_grid(event.x,event.y)
+                    gameGrid = l.update_grid(gameGrid)
+
+                for a in aniList:
+                    a.changePos(event.x*GRIDSIZE,event.y*GRIDSIZE)
+
+                try:
+                    pruneGrid(gameGrid,-5,15)
+                    
+                except:
+                    pass
 
 
-    timePassed = clock.tick(FPS)
-    timePassedSeconds = timePassed/1000.
+                delList = []
+
+                for n in xrange(len(landList)):
+                    land = landList[n]
+                    if land.gridX < -land.numX - 5:
+                        delList.append(n)
+
+                for d in delList:
+                    del landList[d]
+                    for i in xrange(len(delList)):
+                        delList[i] -= 1 #indexes will change
+
+                fillColor = (random.randint(0,255),random.randint(0,255),random.randint(0,255))
+
+                landXTile -= 1
+                totalXTile += 1
+                tilesSinceShift += 1
+
+            elif event.type == PLAYERLOSEEVENT:
+                #print "You Lose!"
+                doGame = False
+            
+
+        gameSurf.fill(BGCOLOR)
+
+        for x in landList:
+            gameSurf = x.blit_surf(gameSurf)
+            
+        currentPlayer = aniList[0]
+
+        PLAYEROFFSETX += currentPlayer.update(timePassed)
+        gameSurf = currentPlayer.draw(gameSurf)
+
+        if currentPlayer.checkFall():
+            pygame.event.post(pygame.event.Event(PLAYERLOSEEVENT))
+
+        if len(aniList) > 1:
+
+            for a in aniList[1:]:
+                a.update(timePassed)
+                gameSurf = a.draw(gameSurf)
+                
+                if a.checkFall():
+                    toDelete.append(a)
+
+                if a.checkSpriteCollide(currentPlayer):
+                    currentPlayer.getHit(a.direction)
+
+
+        for t in toDelete:
+            aniList.pop(aniList.index(t))
+                    
+
+        timeSinceGridShift += timePassedSeconds
+
+        if (SCREENX,SCREENY) != (GAMEX,GAMEY):
+            offset = -GRIDSIZE*(timeSinceGridShift/gridSpeed)*(SCREENX/float(GAMEX))
+            newSurf = pygame.transform.scale(gameSurf,(SCREENX,SCREENY))
+            DISPLAYSURF.blit(newSurf,(offset,0))
+            DISPLAYSURF.fill(fillColor,(SCREENX-GRIDSIZE*(SCREENX/float(GAMEX)),0,GRIDSIZE*(SCREENX/float(GAMEX)),SCREENY))
+                             
+        else:
+            DISPLAYSURF.blit(gameSurf,(0,0))
+
+        if levelUpSurf:
+            DISPLAYSURF.blit(levelUpSurf,levelUpCoords)
+
+            timeSinceLevelUp += timePassedSeconds
+
+            if timeSinceLevelUp >= 4:
+                timeSinceLevelUp = 0
+                levelUpSurf = None
+            
+        pygame.display.update()
+
+        if timeSinceGridShift >= gridSpeed:
+            
+            pygame.event.post(pygame.event.Event(CHANGETILEEVENT,x=-1,y=0))
+            timeSinceGridShift = 0
+
+
+        timePassed = clock.tick(FPS)
+        timePassedSeconds = timePassed/1000.
+
+    spacePressed = False
+    
+    scoreFont = pygame.font.Font(FONT,64)
+    scoreSurf = scoreFont.render("Your Score: %i" % totalXTile,True,WHITE)
+    scoreCoords = (0.5*(SCREENX-scoreSurf.get_width()),0.5*(SCREENY-1.5*scoreSurf.get_height()))
+
+    againFont = pygame.font.Font(FONT,30)
+    againSurf = againFont.render("Press SPACE to play again or ESCAPE to quit.",True,WHITE)
+    againCoords = (0.5*(SCREENX-againSurf.get_width()),scoreCoords[1]+scoreSurf.get_height())
+
+    while not spacePressed:
+
+        for event in pygame.event.get():
+            if event.type == QUIT:
+                exit()
+
+            if event.type == KEYDOWN:
+                
+                if event.key == K_SPACE:
+                    spacePressed = True
+
+                elif event.key == K_ESCAPE:
+                    exit()
+
+        DISPLAYSURF.fill(BLACK)
+
+        DISPLAYSURF.blit(scoreSurf,scoreCoords)
+        DISPLAYSURF.blit(againSurf,againCoords)
+
+        pygame.display.update()
 
