@@ -1,4 +1,3 @@
-#Cut+Run
 #Project for Mini LD 59: Swap
 #May 2015
 #by Joe Cowman
@@ -718,13 +717,19 @@ currentScreen = STARTSCREEN
 
 levelUpFont = pygame.font.Font(FONT,32)
 
+lastPlayerChoice = 0
+lastPlayerIndex1 = P1o
+lastPlayerIndex2 = P1
+
+clock = pygame.time.Clock()
+
 while True:
 
     onTitle = True
     
-    playerList = 0
-    playerIndex1 = P1o
-    playerIndex2 = P1
+    playerList = lastPlayerChoice
+    playerIndex1 = lastPlayerIndex1
+    playerIndex2 = lastPlayerIndex2
 
     pCoords = (720,100)
     pScale = (200,200)
@@ -754,6 +759,10 @@ while True:
 
     ins3Surf = insFont.render("ESCAPE: Quit",True,WHITE)
     ins3Coords = (0.5*(SCREENX-ins3Surf.get_width()),540)
+
+    titleAniIndex = 0
+    titleAniSpeed = 0.25 #sec/frame
+    timeSinceTitleFrame = 0.
 
     while onTitle:
 
@@ -806,7 +815,7 @@ while True:
                     if playerList < 0:
                         playerList = len(spriteLists) - 1
 
-                pSurf = spriteLists[playerList][playerIndex1]
+                pSurf = spriteLists[playerList][playerIndex1+titleAniIndex]
                 tranSurf = pygame.transform.scale(pSurf,pScale)
 
         DISPLAYSURF.fill(BLACK)
@@ -820,6 +829,26 @@ while True:
         DISPLAYSURF.blit(ins3Surf,ins3Coords)
 
         pygame.display.update()
+
+        timePassed = clock.tick(FPS)
+        timePassedSeconds = timePassed / 1000.0
+
+        timeSinceTitleFrame += timePassedSeconds
+
+        if timeSinceTitleFrame >= titleAniSpeed:
+            titleAniIndex += 1
+
+            if titleAniIndex > 2:
+                titleAniIndex = 0
+
+            pSurf = spriteLists[playerList][playerIndex1+titleAniIndex]
+            tranSurf = pygame.transform.scale(pSurf,pScale)
+
+            timeSinceTitleFrame = 0
+
+    lastPlayerChoice = playerList
+    lastPlayerIndex1 = playerIndex1
+    lastPlayerIndex2 = playerIndex2
 
     #print "Starting Game..."
     doGame = True
@@ -856,8 +885,7 @@ while True:
     levelUpCoords = (0.5*(SCREENX-levelUpSurf.get_width()),20)
     timeSinceLevelUp = 0.
 
-    clock = pygame.time.Clock()
-    timePassed = clock.tick()
+    timePassed = clock.tick(FPS)
     timePassedSeconds = timePassed/1000.
 
     while doGame:
